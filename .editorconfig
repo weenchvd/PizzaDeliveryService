@@ -1,0 +1,38 @@
+# You can modify the rules from these initially generated values to suit your own policies
+# You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
+
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = CRLF
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# XML project files
+[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
+indent_size = 2
+
+# XML config files
+[*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+indent_size = 2
+
+# JSON
+[*.json]
+indent_size = 2
+
+# CMake
+[{CMakeLists.txt,*.cmake}]
+indent_size = 2
+
+# FlatBuffers
+[*.{fbs,fbs.in}]
+indent_size = 2
+
+# C++
+[*.{c++,cc,cpp,cxx,h,h++,hh,hpp,hxx,inl,ipp,tlh,tli}]
+indent_size = 4
+cpp_indent_namespace_contents = false
