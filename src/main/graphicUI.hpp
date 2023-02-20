@@ -7,6 +7,13 @@
 #ifndef GRAPHIC_UI_HPP
 #define GRAPHIC_UI_HPP
 
-void graphicUI();
+#include"map.hpp"
+#include<d3d11.h>
+
+bool initializeGUI(WNDCLASSEXW& wc, HWND& hWnd);
+
+void shutdownGUI(WNDCLASSEXW& wc, HWND& hWnd);
+
+void renderGUI(bool* open, ds::Map& map);
 
 #endif // !GRAPHIC_UI_HPP

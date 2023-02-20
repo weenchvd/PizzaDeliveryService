@@ -11,7 +11,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
-
 set(EXEC_NAME "pizza-ds")
 set(SOURCE_CXX_LIST "graphicUI.cpp"
                     "main.cpp"
@@ -22,6 +21,8 @@ add_executable(${EXEC_NAME} ${SOURCE_CXX_LIST})
 
 target_link_libraries(${EXEC_NAME}
                       PRIVATE imgui
+                      PRIVATE map
+                      PRIVATE menu
 )
 
 # Add tests and install targets if needed.

@@ -60,7 +60,6 @@ if(ENABLE_TESTS)
   add_subdirectory("test")
 endif()
 
-#[=[
 if(WIN32)
   cmake_path(GET CMAKE_BINARY_DIR FILENAME CONFIG_NAME)
 
@@ -126,7 +125,6 @@ if(WIN32)
     )
   endif()
 endif()
-]=]
 
 if(WIN32)
   # set paths

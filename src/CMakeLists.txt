@@ -9,3 +9,5 @@ add_compile_definitions(_UNICODE UNICODE)
 
 add_subdirectory("imgui")
 add_subdirectory("main")
+add_subdirectory("map")
+add_subdirectory("menu")
