@@ -20,9 +20,13 @@ set(SOURCE_CXX_LIST "graphicUI.cpp"
 add_executable(${EXEC_NAME} ${SOURCE_CXX_LIST})
 
 target_link_libraries(${EXEC_NAME}
+                      PRIVATE common
+                      PRIVATE courier
                       PRIVATE imgui
                       PRIVATE map
                       PRIVATE menu
+                      PRIVATE msystem
+                      PRIVATE options
 )
 
 # Add tests and install targets if needed.

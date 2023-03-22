@@ -21,6 +21,7 @@ void guiCommonInitialization(ImGuiWindowFlags& window_flags)
     window_flags |= ImGuiWindowFlags_NoMove;
     window_flags |= ImGuiWindowFlags_NoResize;
     window_flags |= ImGuiWindowFlags_NoSavedSettings;
+    window_flags |= ImGuiWindowFlags_MenuBar;
     window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
     window_flags |= ImGuiWindowFlags_NoDocking;
 }

@@ -11,9 +11,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
-set(LIBRARY_NAME "menu")
-set(SOURCE_CXX_LIST "gui_menuCommon.cpp"
-                    "gui_menuMain.cpp"
+set(LIBRARY_NAME "msystem")
+set(SOURCE_CXX_LIST "msystem.cpp"
+                    "delivery.cpp"
+                    "kitchen.cpp"
+                    "scheduler.cpp"
 )
 
 add_library(${LIBRARY_NAME} STATIC ${SOURCE_CXX_LIST})
@@ -23,7 +25,9 @@ target_include_directories(${LIBRARY_NAME}
 )
 
 target_link_libraries(${LIBRARY_NAME}
-                      PUBLIC imgui
-                      PUBLIC msystem
+                      PUBLIC common
+                      PUBLIC courier
+                      PUBLIC map
                       PUBLIC options
+                      PUBLIC order
 )

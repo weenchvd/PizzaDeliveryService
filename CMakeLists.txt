@@ -6,13 +6,13 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project("PizzaDeliveryService"  VERSION 0.1.0)
+project("PizzaDeliveryService"  VERSION 0.2.0)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 
 
 
-set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/external")
+set(EXTERNAL_PROJECTS_DIR "${CMAKE_SOURCE_DIR}/.external")
 set(SRC_FILES_DIR "${CMAKE_SOURCE_DIR}/files")
 set(SRC_FONTS_DIR "${SRC_FILES_DIR}/fonts")
 

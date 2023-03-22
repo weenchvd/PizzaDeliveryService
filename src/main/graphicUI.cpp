@@ -91,7 +91,7 @@ void shutdownGUI(WNDCLASSEXW& wc, HWND& hWnd)
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 }
 
-void renderGUI(bool* open, ds::Map& map)
+void renderGUI(bool* open, ds::ManagmentSystem& ms)
 {
     // Poll and handle messages (inputs, window resize, etc.)
     // See the WndProc() function below for our to dispatch events to the Win32 backend.
@@ -113,7 +113,7 @@ void renderGUI(bool* open, ds::Map& map)
     ImGui::NewFrame();
 
 #if 1
-    ds::guiMenuMain(open, map);
+    ds::guiMenuMain(open, ms);
 #else
     ImGui::ShowDemoWindow(open);
 #endif

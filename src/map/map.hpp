@@ -75,13 +75,9 @@ class Map {
 public:
     static constexpr auto maxDelTime_   { 60* 60 };             // maximum delivery time, seconds
     static constexpr auto noPathTime_   { maxDelTime_ * 5 };    // time for "no path", seconds
-    static constexpr auto waitingTime_  { 60 * 4 };             // waiting time, seconds
 
     static constexpr auto scale_        { 10 };
     static constexpr auto avgSpeed_     { 10 };                 // average courier speed, meters per second
-
-    static constexpr auto vertexRadius_ { 6 };                  // in pixels
-    static constexpr auto edgeWidth_    { 2 };                  // in pixels
 
 public:
     Map();
@@ -101,6 +97,8 @@ public:
     Graph::edge_descriptor addEdge(size_t srcVertex, size_t tgtVertex, int distance);
 
     void removeEdge(size_t srcVertex, size_t tgtVertex);
+
+    std::vector<Graph::edge_descriptor> getPath(size_t srcVertex, size_t tgtVertex);
 
 private:
     Graph g_;

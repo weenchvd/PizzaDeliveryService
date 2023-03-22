@@ -1,9 +1,9 @@
+/.external/
 /.out/
 /.vs/
-/build/
 /backup/
-/external/
+/build/
 /install/
 /trash/
-notes.sqlite
 *.bat
+notes.sqlite

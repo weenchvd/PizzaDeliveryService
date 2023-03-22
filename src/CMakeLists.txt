@@ -7,7 +7,12 @@
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_definitions(_UNICODE UNICODE)
 
+add_subdirectory("common")
+add_subdirectory("courier")
 add_subdirectory("imgui")
 add_subdirectory("main")
 add_subdirectory("map")
 add_subdirectory("menu")
+add_subdirectory("msystem")
+add_subdirectory("options")
+add_subdirectory("order")

@@ -4,9 +4,11 @@
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE or copy at https://www.boost.org/LICENSE_1_0.txt)
 
+#include"common.hpp"
 #include"gui_menuCommon.hpp"
 #include"gui_menuMain.hpp"
 #include"imgui.h"
+#include"options.hpp"
 #include<cstdlib>
 #include<filesystem>
 #include<limits>
@@ -17,7 +19,7 @@ namespace ds {
 
 using namespace std;
 
-void guiMenuMain(bool* open, Map& map)
+void guiMenuMain(bool* open, ManagmentSystem& ms)
 {
     ImGuiWindowFlags window_flags{ 0 };
     guiCommonInitialization(window_flags);
@@ -25,22 +27,119 @@ void guiMenuMain(bool* open, Map& map)
 
     s = string{ u8"Main menu" } + u8"###MenuMain";
     if (ImGui::Begin(s.c_str(), nullptr, window_flags)) {
-        const ImVec2 defaultScrolling   { 0.0f, 0.0f };
-        //const float  defaultScaling     { 1.0f };
-        //const float  defaultScalingStep { 0.1f };
+        // menu bar
+        static bool optEnableGrid{ true };
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("Options")) {
+                ImGuiIO& io{ ImGui::GetIO() };
+                ImGui::Text("%.1f FPS (%.3f ms/frame)", io.Framerate, 1000.0f / io.Framerate);
+                ImGui::SliderInt("Frames per second (FPS)",
+                    &Options::instance().fps_, Options::minFPS_,
+                    Options::maxFPS_, "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Time speed (multiplier)",
+                    &Options::instance().timeSpeed_, Options::minTimeSpeed_,
+                    Options::maxTimeSpeed_, "%d", ImGuiSliderFlags_AlwaysClamp);
 
-        static bool optEnableGrid       { true };
-        ImGui::Checkbox("Enable grid", &optEnableGrid);
-        {
-            ImGuiIO& io{ ImGui::GetIO() };
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+                ImGui::Separator();
+                ImGui::SliderInt("Delivery and payment time (sec)",
+                    &Options::instance().paymentTime_, Options::minPaymentTime_,
+                    Options::maxPaymentTime_, "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Time to check free couriers (sec)",
+                    &Options::instance().checkTimeFreeCour_, Options::minCheckTimeFreeCour_,
+                    Options::maxCheckTimeFreeCour_, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+                ImGui::Separator();
+                ImGui::Checkbox("Enable grid", &optEnableGrid);
+                ImGui::SliderInt("Vertex radius (pixels)",
+                    &Options::instance().vertexRadius_, Options::minVertexRadius_,
+                    Options::maxVertexRadius_, "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Edge width (pixels)",
+                    &Options::instance().edgeWidth_, Options::minEdgeWidth_,
+                    Options::maxEdgeWidth_, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
         }
 
-        ImVec2 canvasP0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
-        ImVec2 canvasSize = ImGui::GetContentRegionAvail(); // Resize canvas to what's available
+        const ImVec2 defaultScrolling   { 0.0f, 0.0f };
+        ImVec2 contentRegionSize{ ImGui::GetContentRegionAvail() };
+        const ImGuiStyle& style{ ImGui::GetStyle() };
+        ImVec2 infoColumnSize{
+            contentRegionSize.x / 4.0f - style.ItemSpacing.x,
+            contentRegionSize.y - style.ItemSpacing.y
+        };
+        ImVec2 canvasSize{
+            contentRegionSize.x / 4.0f * 3.0f - style.ItemSpacing.x,
+            contentRegionSize.y - style.ItemSpacing.y
+        };
+
+        // draw INFO panel
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        ImGuiWindowFlags flags{ ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse };
+        if (ImGui::BeginChild("Info", infoColumnSize, false, flags)) {
+            ImGui::PopStyleVar();
+            const unsigned int width{ 8 };
+            const char filler{ '0' };
+
+            ImGui::TextUnformatted("Orders in the \"Cooking\" status (top - last)");
+            if (ImGui::BeginListBox("Cooking orders",
+                ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() + 2)))
+            {
+                auto cookOrders{ ms.kitchen().getOrders() };
+                vector<Order*>::const_iterator iter{ cookOrders.second };
+                while (iter != cookOrders.first) {
+                    --iter;
+                    ostringstream oss;
+                    oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
+                        << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+
+            ImGui::TextUnformatted("Orders with the \"Delivery\" status (top - last)");
+            if (ImGui::BeginListBox("Delivery orders",
+                ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() + 2)))
+            {
+                auto delivOrders{ ms.delivery().getOrders() };
+                vector<Order*>::const_iterator iter{ delivOrders.second };
+                while (iter != delivOrders.first) {
+                    --iter;
+                    ostringstream oss;
+                    oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
+                        << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+
+            ImGui::TextUnformatted("Orders with the \"Completed\" status (top - last)");
+            if (ImGui::BeginListBox("Completed orders",
+                ImVec2(-FLT_MIN, Options::numComplOrders_ * ImGui::GetTextLineHeightWithSpacing() + 2)))
+            {
+                auto complOrders{ ms.scheduler().getOrdersCompleted() };
+                boost::circular_buffer<Order*>::const_iterator iter{ complOrders.second };
+                while (iter != complOrders.first) {
+                    --iter;
+                    ostringstream oss;
+                    oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
+                        << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else {
+            ImGui::PopStyleVar();
+        }
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+        ImVec2 canvasP0{ ImGui::GetCursorScreenPos() };         // ImDrawList API uses screen coordinates!
         if (canvasSize.x < 50.0f) canvasSize.x = 50.0f;
         if (canvasSize.y < 50.0f) canvasSize.y = 50.0f;
-        ImVec2 canvasP1 = ImVec2(canvasP0.x + canvasSize.x, canvasP0.y + canvasSize.y);
+        ImVec2 canvasP1{ ImVec2(canvasP0.x + canvasSize.x, canvasP0.y + canvasSize.y) };
 
         // draw border and background color of the canvas
         ImGuiIO& io{ ImGui::GetIO() };
@@ -57,7 +156,7 @@ void guiMenuMain(bool* open, Map& map)
         const ImVec2 mousePosInCanvas{ io.MousePos.x - origin.x, io.MousePos.y - origin.y };
 
         // actions on the canvas
-        const auto& vertices{ map.graph().m_vertices };
+        const auto& vertices{ ms.map().graph().m_vertices };
         static bool addingEdge{ false };
         static int vertex       { numeric_limits<int>::max() };
         static int vertexPrev   { 0 };
@@ -74,10 +173,13 @@ void guiMenuMain(bool* open, Map& map)
             for (int i = 0; i < vertices.size(); ++i) {
                 ImGui::PushID(i);
                 // vertex == invisible button in same place
-                const ImVec2 invButtonSize{ float(Map::vertexRadius_ * 2), float(Map::vertexRadius_ * 2) };
+                const ImVec2 invButtonSize{
+                    float(Options::instance().vertexRadius_ * 2),
+                    float(Options::instance().vertexRadius_ * 2)
+                };
                 const ImVec2 screenPos{
-                    origin.x + vertices[i].m_property.x_ - Map::vertexRadius_,
-                    origin.y + vertices[i].m_property.y_ - Map::vertexRadius_
+                    origin.x + vertices[i].m_property.x_ - Options::instance().vertexRadius_,
+                    origin.y + vertices[i].m_property.y_ - Options::instance().vertexRadius_
                 };
                 ImGui::SetCursorScreenPos(screenPos);
                 ImGui::InvisibleButton(u8"v", invButtonSize,
@@ -140,7 +242,7 @@ void guiMenuMain(bool* open, Map& map)
                             const int yDiff{ vertices[edgeSrcVertex].m_property.y_ -
                                              vertices[edgeTgtVertex].m_property.y_ };
                             const int distance = std::sqrt(xDiff * xDiff + yDiff * yDiff) * Map::scale_;
-                            map.addEdge(edgeSrcVertex, edgeTgtVertex, distance);
+                            ms.map().addEdge(edgeSrcVertex, edgeTgtVertex, distance);
                         }
                     }
                     addingEdge = false;
@@ -171,7 +273,7 @@ void guiMenuMain(bool* open, Map& map)
             ImGui::TextUnformatted(oss.str().c_str());
             ImGui::Separator();
             if (ImGui::MenuItem(u8"Add vertex here")) {
-                map.addVertex(vertexPos.x, vertexPos.y);
+                ms.map().addVertex(vertexPos.x, vertexPos.y);
             }
             if (ImGui::MenuItem(u8"Reset scrolling")) {
                 scrolling = defaultScrolling;
@@ -181,7 +283,7 @@ void guiMenuMain(bool* open, Map& map)
         if (ImGui::BeginPopup(u8"ContextVertexPopup")) {
             if (ImGui::MenuItem(u8"Remove vertex")) {
                 if (vertex != numeric_limits<int>::max()) {
-                    map.removeVertex(vertex);
+                    ms.map().removeVertex(vertex);
                     vertex = numeric_limits<int>::max();
                 }
             }
@@ -191,7 +293,7 @@ void guiMenuMain(bool* open, Map& map)
                     oss << u8"Remove edge " << i << u8": " << vertex << u8" -> "
                         << vertices[vertex].m_out_edges[i].m_target;
                     if (ImGui::MenuItem(oss.str().c_str())) {
-                        map.removeEdge(vertex, vertices[vertex].m_out_edges[i].m_target);
+                        ms.map().removeEdge(vertex, vertices[vertex].m_out_edges[i].m_target);
                     }
                 }
                 ImGui::EndMenu();
@@ -224,7 +326,7 @@ void guiMenuMain(bool* open, Map& map)
             drawList->AddCircleFilled(
                 ImVec2{ origin.x + vertices[i].m_property.x_,
                         origin.y + vertices[i].m_property.y_ },
-                Map::vertexRadius_, graphColor, 4);
+                Options::instance().vertexRadius_, graphColor, 4);
         }
         // draw edges
         for (int i = 0; i < vertices.size(); ++i) {
@@ -237,14 +339,16 @@ void guiMenuMain(bool* open, Map& map)
                     origin.x + vertices[vertices[i].m_out_edges[j].m_target].m_property.x_,
                     origin.y + vertices[vertices[i].m_out_edges[j].m_target].m_property.y_
                 };
-                drawList->AddLine(srcPoint, tgtPoint, graphColor, float(Map::edgeWidth_));
+                drawList->AddLine(srcPoint, tgtPoint, graphColor,
+                    float(Options::instance().edgeWidth_));
                 // draw the direction of the edge as a point close to the target point
                 const float t{ 0.9f };
                 const ImVec2 directionPoint{
                     (1 - t) * srcPoint.x + t * tgtPoint.x,
                     (1 - t) * srcPoint.y + t * tgtPoint.y
                 };
-                drawList->AddCircleFilled(directionPoint, float(Map::vertexRadius_ * 0.6f), graphColor);
+                drawList->AddCircleFilled(directionPoint,
+                    int(Options::instance().vertexRadius_ * 0.6f), graphColor);
             }
         }
         // draw the edge being drawn at the moment
@@ -252,8 +356,17 @@ void guiMenuMain(bool* open, Map& map)
             drawList->AddLine(
                 ImVec2{ origin.x + edgeP1.x, origin.y + edgeP1.y },
                 ImVec2{ origin.x + edgeP2.x, origin.y + edgeP2.y },
-                graphColor, float(Map::edgeWidth_));
+                graphColor, float(Options::instance().edgeWidth_));
         }
+        // draw courier location
+        auto couriers{ ms.getCouriers() };
+        for (auto iter{ couriers.first }; iter != couriers.second; ++iter) {
+            ImVec2 courierLocation{ iter->get()->getLocation() };
+            courierLocation.x += origin.x;
+            courierLocation.y += origin.y;
+            drawList->AddCircleFilled(courierLocation, 8, ImGui::GetColorU32(color::turquoise), 6);
+        }
+
         drawList->PopClipRect();
     }
     ImGui::End();

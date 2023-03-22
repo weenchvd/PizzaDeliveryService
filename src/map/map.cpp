@@ -23,12 +23,6 @@ bool operator<(const GraphRC& rc1, const GraphRC& rc2)
     return true;
 }
 
-enum nodes
-{
-    A, B, C, D, E, F, G, H, NUMBER_OF
-};
-char name[] = "ABCDEFGH";
-
 int calcDistance(const Map& map, int edgeSrcVertex, int edgeTgtVertex)
 {
     const int xDiff{ map.graph().m_vertices[edgeSrcVertex].m_property.x_ -
@@ -70,6 +64,25 @@ Map::Map()
     add_edge(5, 3, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
     distance = calcDistance(*this, 1, 3);
     add_edge(1, 3, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
+}
+
+std::vector<Graph::edge_descriptor> Map::getPath(size_t srcVertex, size_t tgtVertex)
+{
+    vector<vector<Graph::edge_descriptor>> optSolutions;
+    vector<GraphRC> paretoOptRCS;
+    r_c_shortest_paths(g_, get(&GraphVertexPropertyMap::num_, g_),
+        get(&GraphEdgePropertyMap::num_, g_), srcVertex, tgtVertex,
+        optSolutions, paretoOptRCS, GraphRC{ 0, 0 }, GraphREF{}, GraphDF{},
+        std::allocator<boost::r_c_shortest_paths_label<Graph, GraphRC>>(),
+        boost::default_r_c_shortest_paths_visitor());
+
+    if (optSolutions.size() < 1) throw;
+    vector<Graph::edge_descriptor> path{};
+    path.reserve(optSolutions[0].size());
+    for (int i = optSolutions[0].size() - 1; i >= 0; --i) {
+        path.push_back(optSolutions[0][i]);
+    }
+    return path;
 }
 
 } // namespace ds

@@ -7,12 +7,12 @@
 #ifndef GUI_MENU_MAIN_HPP
 #define GUI_MENU_MAIN_HPP
 
-#include"map.hpp"
+#include"msystem.hpp"
 #include<memory>
 
 namespace ds {
 
-void guiMenuMain(bool* open, Map& map);
+void guiMenuMain(bool* open, ManagmentSystem& ms);
 
 } // namespace ds
 
