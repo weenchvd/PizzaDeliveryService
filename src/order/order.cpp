@@ -48,13 +48,12 @@ string toString(OrderStatus value)
 
 ///************************************************************************************************
 
-Order::Order(const OrderID orderID, const size_t target)
+Order::Order(const OrderID orderID, const size_t target, const time_point_t timeStart)
     :
     orderID_        { orderID },
     target_         { target },
-    timeStart_      { chrono::system_clock::now() },
-    timeEnd_        { timeStart_ },
-    passedTime_     { 0 },
+    timeStart_      { timeStart },
+    timeEnd_        { timeStart },
     status_         { OrderStatus::INVALID }
 {}
 

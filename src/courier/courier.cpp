@@ -70,7 +70,6 @@ void CourierAccepting::update(Courier& courier, std::chrono::nanoseconds passedT
         courier.routeList_->order_->setStatus(OrderStatus::DELIVERING);
     }
     courier.prevStatus_ = CourierStatus::ACCEPTING_ORDER;
-    courier.routeList_->order_->addPassedTime(passedTime);
     courier.routeList_->requiredTime_ -= passedTime;
     if (courier.routeList_->requiredTime_.count() <= 0) {
         courier.isDelivering_ = true;
@@ -87,7 +86,6 @@ void CourierMovement::update(Courier& courier, std::chrono::nanoseconds passedTi
         courier.routeList_->fullDist_ = courier.ms_.map().graph()[edge].distance_ * nano::den;
     }
     courier.prevStatus_ = CourierStatus::MOVEMENT_TO_CUSTOMER;
-    courier.routeList_->order_->addPassedTime(passedTime);
     courier.routeList_->passedDist_ += passedTime.count() * Map::avgSpeed_;
     if (courier.routeList_->passedDist_ >= courier.routeList_->fullDist_) {
         ++courier.routeList_->curEdge_;
@@ -132,7 +130,6 @@ void CourierPayment::update(Courier& courier, std::chrono::nanoseconds passedTim
         };
     }
     courier.prevStatus_ = CourierStatus::DELIVERY_AND_PAYMENT;
-    courier.routeList_->order_->addPassedTime(passedTime);
     courier.routeList_->requiredTime_ -= passedTime;
     if (courier.routeList_->requiredTime_.count() <= 0) {
         //++courier.curEdge_;
@@ -154,7 +151,6 @@ void CourierPayment::update(Courier& courier, std::chrono::nanoseconds passedTim
 
 void CourierReturning::update(Courier& courier, std::chrono::nanoseconds passedTime)
 {
-    //courier.routeList_->order_->addPassedTime(passedTime);
     const auto target{ courier.routeList_->path_[courier.routeList_->path_.size() - 1].m_target };
     courier.routeList_->curEdge_ = 0;
     courier.routeList_->path_ =

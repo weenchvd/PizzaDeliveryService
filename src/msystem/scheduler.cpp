@@ -36,7 +36,7 @@ void Scheduler::processOrder(Order* order)
         break;
     case OrderStatus::PAYMENT_COMPLETED:
         order->setStatus(OrderStatus::COMPLETED);
-        order->setTimeEnd();
+        order->setTimeEnd(ms_->getCurrentTime());
         ordersCompl_.push_back(order);
         break;
     }

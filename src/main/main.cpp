@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
 
         chrono::nanoseconds npf{ 0 }; // nanoseconds per frame
         auto prevFS{ chrono::steady_clock::now() }; // previous frameStart
+        ms.setCurrentTime();
         while (showGuiMenuMain) {
             const auto frameStart{ chrono::steady_clock::now() };
             auto elapsedTime{ frameStart - prevFS };

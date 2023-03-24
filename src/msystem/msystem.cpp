@@ -21,11 +21,14 @@ ManagmentSystem::ManagmentSystem(Map& map, Scheduler& scheduler, Kitchen& kitche
     delivery_           { delivery },
     orders_             {},
     couriers_           {},
+    startTime_          { chrono::system_clock::now() },
+    passedTime_         { 0 },
     nextOrderID_        { 0 }
 {}
 
-void ManagmentSystem::update(std::chrono::nanoseconds passedTime)
+void ManagmentSystem::update(chrono::nanoseconds passedTime)
 {
+    passedTime_ += passedTime;
     kitchen_.update(passedTime);
     delivery_.update(passedTime);
 }
@@ -34,7 +37,7 @@ Order* ManagmentSystem::createOrder()
 {
     int randomTarget{ cmn::getRandomNumber(1, map_.graph().m_vertices.size() - 1) };
     assert(randomTarget >= 0);
-    unique_ptr<Order> order{ new Order{ nextOrderID_, size_t(randomTarget) } };
+    unique_ptr<Order> order{ new Order{ nextOrderID_, size_t(randomTarget), getCurrentTime() } };
     assert(order.get() != nullptr);
     nextOrderID_ = OrderID{ cmn::toUnderlying(nextOrderID_) + 1 };
     order->setStatus(OrderStatus::ACCEPTED);
@@ -42,6 +45,11 @@ Order* ManagmentSystem::createOrder()
     Order* o{ orders_.back().get() };
     scheduler_.processOrder(o);
     return o;
+}
+
+ManagmentSystem::time_point_t ManagmentSystem::getCurrentTime() const noexcept
+{
+    return startTime_ + chrono::duration_cast<time_point_t::duration>(passedTime_);
 }
 
 Courier* ManagmentSystem::activateCourier(CourierID courierID)

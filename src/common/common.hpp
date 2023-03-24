@@ -8,7 +8,9 @@
 #define COMMON_HPP
 
 #include<assert.h>
+#include<chrono>
 #include<random>
+#include<string>
 #include<type_traits>
 #include<utility>
 #include<vector>
@@ -24,6 +26,10 @@ constexpr auto toUnderlying(Enum e) noexcept
 ///************************************************************************************************
 
 int getRandomNumber(int from, int to);
+
+std::string getDuration(std::chrono::system_clock::duration duration);
+
+std::string getTime(std::chrono::system_clock::time_point timePoint);
 
 template <class T>
 T extractWithShift(std::vector<T>& v, size_t index)

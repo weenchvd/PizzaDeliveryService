@@ -25,7 +25,6 @@ void Kitchen::update(chrono::nanoseconds passedTime)
     assert(ms_ != nullptr);
     assert(ordersCooking_.size() == remainingTime_.size());
     for (int i = 0; i < ordersCooking_.size();) {
-        ordersCooking_[i]->addPassedTime(passedTime);
         remainingTime_[i] -= passedTime;
         if (remainingTime_[i].count() <= 0) {
             cmn::extractWithShift(remainingTime_, i);

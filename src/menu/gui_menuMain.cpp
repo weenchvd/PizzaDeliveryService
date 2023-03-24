@@ -59,6 +59,10 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
 
                 ImGui::EndMenu();
             }
+
+            ImGui::SameLine(0.0f, 50.0f);
+            ImGui::TextUnformatted(cmn::getTime(ms.getCurrentTime()).c_str());
+
             ImGui::EndMenuBar();
         }
 
@@ -125,6 +129,10 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                     ostringstream oss;
                     oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
                         << " - " << toString((*iter)->getStatus());
+                    if ((*iter)->getStatus() == OrderStatus::COMPLETED) {
+                        oss << " in "
+                            << cmn::getDuration((*iter)->getTimeEnd() - (*iter)->getTimeStart());
+                    }
                     ImGui::TextUnformatted(oss.str().c_str());
                 }
                 ImGui::EndListBox();

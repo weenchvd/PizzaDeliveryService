@@ -44,7 +44,7 @@ public:
     using time_point_t = std::chrono::system_clock::time_point;
 
 public:
-    Order(const OrderID orderID, const size_t target);
+    Order(const OrderID orderID, const size_t target, const time_point_t timeStart);
 
     Order(const Order&) = delete;
     Order& operator=(const Order&) = delete;
@@ -58,9 +58,11 @@ public:
 
     size_t getTarget() const noexcept { return target_; }
 
-    void addPassedTime(std::chrono::nanoseconds passedTime) { passedTime_ += passedTime; }
+    time_point_t getTimeStart() const noexcept { return timeStart_; }
 
-    void setTimeEnd() { timeEnd_ = std::chrono::system_clock::now(); }
+    time_point_t getTimeEnd() const noexcept { return timeEnd_; }
+
+    void setTimeEnd(time_point_t timeEnd) { timeEnd_ = timeEnd; }
 
     OrderStatus getStatus() const noexcept { return status_; }
 
@@ -71,7 +73,6 @@ private:
     const size_t                                target_;
     const time_point_t                          timeStart_;
     time_point_t                                timeEnd_;
-    std::chrono::nanoseconds                    passedTime_;    // time has passed since the order was received
     OrderStatus                                 status_;
 };
 

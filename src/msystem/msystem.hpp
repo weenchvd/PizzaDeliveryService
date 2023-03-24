@@ -22,6 +22,9 @@ namespace ds {
 
 class ManagmentSystem {
 public:
+    using time_point_t = std::chrono::system_clock::time_point;
+
+public:
     ManagmentSystem(Map& map, Scheduler& scheduler, Kitchen& kitchen, Delivery& delivery);
 
     ManagmentSystem(const ManagmentSystem&) = delete;
@@ -53,6 +56,10 @@ public:
 
     void processOrder(Order* order) { scheduler_.processOrder(order); }
 
+    time_point_t getCurrentTime() const noexcept;
+
+    void setCurrentTime() noexcept;
+
     auto getOrders() const { return std::pair{ orders_.cbegin(), orders_.cend() }; }
 
     auto getOrders() { return std::pair{ orders_.begin(), orders_.end() }; }
@@ -72,8 +79,18 @@ private:
     Delivery&                                   delivery_;
     std::vector<std::unique_ptr<Order>>         orders_;
     std::vector<std::unique_ptr<Courier>>       couriers_;
+    time_point_t                                startTime_;     // program start time
+    std::chrono::nanoseconds                    passedTime_;    // time passed since startTime_
     OrderID                                     nextOrderID_;
 };
+
+///************************************************************************************************
+
+inline void ManagmentSystem::setCurrentTime() noexcept
+{
+    passedTime_ = std::chrono::nanoseconds{ 0 };
+    startTime_ = std::chrono::system_clock::now();
+}
 
 } // namespace ds
 
