@@ -7,18 +7,19 @@
 #ifndef ORDER_HPP
 #define ORDER_HPP
 
+#include"food.hpp"
 #include"map.hpp"
 #include<chrono>
 #include<memory>
 #include<string>
+#include<type_traits>
 #include<vector>
 
 namespace ds {
 
 enum class OrderID : unsigned long long int {};
 
-enum class OrderStatus : char
-{
+enum class OrderStatus : char {
     INVALID = -1,
 
     ACCEPTED,
@@ -64,6 +65,10 @@ public:
 
     void setTimeEnd(time_point_t timeEnd) { timeEnd_ = timeEnd; }
 
+    const std::vector<Food>& getFood() const noexcept { return food_; }
+
+    void setFood(std::vector<Food> food);
+
     OrderStatus getStatus() const noexcept { return status_; }
 
     void setStatus(OrderStatus status) noexcept { status_ = status; }
@@ -73,6 +78,7 @@ private:
     const size_t                                target_;
     const time_point_t                          timeStart_;
     time_point_t                                timeEnd_;
+    std::vector<Food>                           food_;
     OrderStatus                                 status_;
 };
 

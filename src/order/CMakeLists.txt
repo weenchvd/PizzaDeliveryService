@@ -12,7 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
 set(LIBRARY_NAME "order")
-set(SOURCE_CXX_LIST "order.cpp")
+set(SOURCE_CXX_LIST "order.cpp"
+                    "food.cpp"
+)
 
 add_library(${LIBRARY_NAME} STATIC ${SOURCE_CXX_LIST})
 

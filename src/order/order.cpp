@@ -42,7 +42,7 @@ string toString(OrderStatus value)
     case OrderStatus::CANCELLED:
         return u8"Cancelled";
     default:
-        return u8"UNKNOWN STATUS";
+        return u8"UNKNOWN";
     }
 }
 
@@ -54,8 +54,17 @@ Order::Order(const OrderID orderID, const size_t target, const time_point_t time
     target_         { target },
     timeStart_      { timeStart },
     timeEnd_        { timeStart },
+    food_           {},
     status_         { OrderStatus::INVALID }
 {}
+
+void Order::setFood(std::vector<Food> food)
+{
+    food_ = std::move(food);
+    for (auto& f : food_) {
+        f.setStatus(FoodStatus::WAITING_FOR_MAKING);
+    }
+}
 
 RouteList::RouteList(const ManagmentSystem& ms, Order* order,
     std::vector<Graph::edge_descriptor> path)

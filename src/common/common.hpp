@@ -23,6 +23,51 @@ constexpr auto toUnderlying(Enum e) noexcept
     return static_cast<std::underlying_type_t<Enum>>(e);
 }
 
+template <class Enum>
+constexpr void verifyEnum() noexcept
+{
+    assert(toUnderlying(Enum::__INVALID) == -1);
+    assert(Enum::__INVALID < Enum::__NUMBER_OF);
+    assert(Enum::__NUMBER_OF < Enum::__END);
+}
+
+template <class Enum>
+constexpr bool isValidEnum(Enum e) noexcept
+{
+    verifyEnum<Enum>();
+    return (e > Enum::__INVALID && e < Enum::__NUMBER_OF);
+}
+
+template <class Enum>
+constexpr bool isValidEnumAux(Enum e) noexcept
+{
+    verifyEnum<Enum>();
+    return (e > Enum::__NUMBER_OF && e < Enum::__END);
+}
+
+template <class Enum>
+constexpr auto numberOf() noexcept
+{
+    verifyEnum<Enum>();
+    return toUnderlying(Enum::__NUMBER_OF);
+}
+
+template <class Enum>
+constexpr auto firstEnum() noexcept
+{
+    auto e{ static_cast<Enum>(toUnderlying(Enum::__INVALID) + 1) };
+    assert(isValidEnum(e));
+    return e;
+}
+
+template <class Enum>
+constexpr auto lastEnum() noexcept
+{
+    auto e{ static_cast<Enum>(toUnderlying(Enum::__NUMBER_OF) - 1) };
+    assert(isValidEnum(e));
+    return e;
+}
+
 ///************************************************************************************************
 
 int getRandomNumber(int from, int to);

@@ -73,6 +73,9 @@ public:
     bool deactivateCourier(CourierID courierID);
 
 private:
+    std::vector<Food> createRandomFood() const;
+
+private:
     Map&                                        map_;
     Scheduler&                                  scheduler_;
     Kitchen&                                    kitchen_;

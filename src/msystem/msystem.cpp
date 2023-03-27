@@ -41,6 +41,7 @@ Order* ManagmentSystem::createOrder()
     assert(order.get() != nullptr);
     nextOrderID_ = OrderID{ cmn::toUnderlying(nextOrderID_) + 1 };
     order->setStatus(OrderStatus::ACCEPTED);
+    order->setFood(createRandomFood());
     orders_.push_back(std::move(order));
     Order* o{ orders_.back().get() };
     scheduler_.processOrder(o);
@@ -77,6 +78,29 @@ bool ManagmentSystem::deactivateCourier(CourierID courierID)
         }
     }
     return false;
+}
+
+vector<Food> ManagmentSystem::createRandomFood() const
+{
+    vector<Food> food;
+    int n{ cmn::getRandomNumber(1, 6) };
+    for (int i = 0; i < n; ++i) {
+        FoodType type{ char(cmn::getRandomNumber(
+            cmn::toUnderlying(cmn::firstEnum<FoodType>()),
+            cmn::toUnderlying(cmn::lastEnum<FoodType>())
+        ))};
+        bool isExist{ false };
+        for (const auto& f : food) {
+            if (f.getType() == type) {
+                isExist = true;
+                break;
+            }
+        }
+        if (isExist == false) {
+            food.push_back(Food{ unsigned short(cmn::getRandomNumber(1, 3)), type });
+        }
+    }
+    return food;
 }
 
 } // namespace ds
