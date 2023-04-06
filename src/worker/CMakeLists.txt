@@ -12,7 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
 set(LIBRARY_NAME "courier")
-set(SOURCE_CXX_LIST "courier.cpp")
+set(SOURCE_CXX_LIST "courier.cpp"
+                    "kitchener.cpp"
+)
 
 add_library(${LIBRARY_NAME} STATIC ${SOURCE_CXX_LIST})
 

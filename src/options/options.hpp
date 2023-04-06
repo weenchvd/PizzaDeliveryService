@@ -13,6 +13,11 @@ class Options {
 public:
     static constexpr unsigned int numComplOrders_{ 10 };        // number of completed orders
 
+    static constexpr unsigned int minPauseTime_{ 60 };          // seconds
+    static constexpr unsigned int maxPauseTime_{ 60 * 15 };     // seconds
+
+    static constexpr unsigned int pauseChance_{ 4 };            // percent
+
 
     static constexpr unsigned int defFPS_{ 60 };
     static constexpr unsigned int minFPS_{ 1 };
@@ -20,7 +25,7 @@ public:
 
     static constexpr unsigned int defTimeSpeed_{ 1 };
     static constexpr unsigned int minTimeSpeed_{ 1 };
-    static constexpr unsigned int maxTimeSpeed_{ 100 };
+    static constexpr unsigned int maxTimeSpeed_{ 120 };
 
     static constexpr unsigned int defPaymentTime_{ 240 };       // seconds
     static constexpr unsigned int minPaymentTime_{ 60 };        // seconds

@@ -19,9 +19,9 @@ Scheduler::Scheduler(Graph::vertex_descriptor office)
     :
     ms_             { nullptr },
     office_         { office },
-    ordersCompl_    {}
+    orders_         {}
 {
-    ordersCompl_.set_capacity(Options::numComplOrders_);
+    orders_.set_capacity(Options::numComplOrders_);
 }
 
 void Scheduler::processOrder(Order* order)
@@ -37,7 +37,7 @@ void Scheduler::processOrder(Order* order)
     case OrderStatus::PAYMENT_COMPLETED:
         order->setStatus(OrderStatus::COMPLETED);
         order->setTimeEnd(ms_->getCurrentTime());
-        ordersCompl_.push_back(order);
+        orders_.push_back(order);
         break;
     }
 }

@@ -10,38 +10,38 @@ namespace ds {
 
 using namespace std;
 
-string toString(FoodType value)
+string toString(FoodName value)
 {
     switch (value) {
-    case FoodType::PEPPERONI:
+    case FoodName::PEPPERONI:
         return u8"Pepperoni";
-    case FoodType::PEPPERONI_FRESH:
+    case FoodName::PEPPERONI_FRESH:
         return u8"Pepperoni Fresh";
-    case FoodType::DOUBLE_PEPPERONI:
+    case FoodName::DOUBLE_PEPPERONI:
         return u8"Double Pepperoni";
-    case FoodType::CHICKEN_BBQ:
+    case FoodName::CHICKEN_BBQ:
         return u8"Chicken BBQ";
-    case FoodType::HAWAIIAN:
+    case FoodName::HAWAIIAN:
         return u8"Hawaiian";
-    case FoodType::FOUR_CHEESE:
+    case FoodName::FOUR_CHEESE:
         return u8"4 Cheese";
-    case FoodType::VEGAN_HOT:
+    case FoodName::VEGAN_HOT:
         return u8"Vegan Hot";
-    case FoodType::CLASSIC_WINGS:
+    case FoodName::CLASSIC_WINGS:
         return u8"Classic Wings";
-    case FoodType::BBQ_WINGS:
+    case FoodName::BBQ_WINGS:
         return u8"BBQ Wings";
-    case FoodType::TERIYAKI_WINGS:
+    case FoodName::TERIYAKI_WINGS:
         return u8"Teriyaki Wings";
-    case FoodType::VEGAN_NUGGETS:
+    case FoodName::VEGAN_NUGGETS:
         return u8"Vegan Nuggets";
-    case FoodType::CHICKEN_STRIPS:
+    case FoodName::CHICKEN_STRIPS:
         return u8"Chicken Strips";
-    case FoodType::COLA:
+    case FoodName::COLA:
         return u8"Cola";
-    case FoodType::CITRUS_JUICE:
+    case FoodName::CITRUS_JUICE:
         return u8"Citrus Juice";
-    case FoodType::WATER:
+    case FoodName::WATER:
         return u8"Water";
     default:
         return u8"UNKNOWN";
@@ -50,38 +50,64 @@ string toString(FoodType value)
 
 ///************************************************************************************************
 
+FoodType Food::getType() const noexcept
+{
+    switch (name_) {
+    case FoodName::PEPPERONI:
+    case FoodName::PEPPERONI_FRESH:
+    case FoodName::DOUBLE_PEPPERONI:
+    case FoodName::CHICKEN_BBQ:
+    case FoodName::HAWAIIAN:
+    case FoodName::FOUR_CHEESE:
+    case FoodName::VEGAN_HOT:
+        return FoodType::PIZZA;
+    case FoodName::CLASSIC_WINGS:
+    case FoodName::BBQ_WINGS:
+    case FoodName::TERIYAKI_WINGS:
+    case FoodName::VEGAN_NUGGETS:
+    case FoodName::CHICKEN_STRIPS:
+        return FoodType::SIDES;
+    case FoodName::COLA:
+    case FoodName::CITRUS_JUICE:
+    case FoodName::WATER:
+        return FoodType::DRINKS;
+    default:
+        return FoodType::__INVALID;
+    }
+}
+
 chrono::seconds Food::getPreparationTime() const noexcept
 {
-    switch (type_) {
-    case FoodType::PEPPERONI:
-        return chrono::seconds{ 60 * 3 + 30 };
-    case FoodType::PEPPERONI_FRESH:
+    switch (name_) {
+    case FoodName::PEPPERONI:
+        return chrono::seconds{ 60 * 4 + 30 };
+    case FoodName::PEPPERONI_FRESH:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::DOUBLE_PEPPERONI:
+        return chrono::seconds{ 60 * 4 + 50 };
+    case FoodName::CHICKEN_BBQ:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::HAWAIIAN:
+        return chrono::seconds{ 60 * 6 + 20 };
+    case FoodName::FOUR_CHEESE:
         return chrono::seconds{ 60 * 4 };
-    case FoodType::DOUBLE_PEPPERONI:
-        return chrono::seconds{ 60 * 3 + 50 };
-    case FoodType::CHICKEN_BBQ:
-        return chrono::seconds{ 60 * 4 };
-    case FoodType::HAWAIIAN:
-        return chrono::seconds{ 60 * 5 + 20 };
-    case FoodType::FOUR_CHEESE:
-        return chrono::seconds{ 60 * 3 };
-    case FoodType::VEGAN_HOT:
-        return chrono::seconds{ 60 * 4 + 40 };
-    case FoodType::CLASSIC_WINGS:
+    case FoodName::VEGAN_HOT:
+        return chrono::seconds{ 60 * 5 + 40 };
+    case FoodName::CLASSIC_WINGS:
         return chrono::seconds{ 50 };
-    case FoodType::BBQ_WINGS:
+    case FoodName::BBQ_WINGS:
         return chrono::seconds{ 60 };
-    case FoodType::TERIYAKI_WINGS:
+    case FoodName::TERIYAKI_WINGS:
         return chrono::seconds{ 60 + 30 };
-    case FoodType::VEGAN_NUGGETS:
+    case FoodName::VEGAN_NUGGETS:
         return chrono::seconds{ 50 };
-    case FoodType::CHICKEN_STRIPS:
+    case FoodName::CHICKEN_STRIPS:
         return chrono::seconds{ 60 };
-    case FoodType::COLA:
+    case FoodName::COLA:
         return chrono::seconds{ 30 };
-    case FoodType::CITRUS_JUICE:
+    case FoodName::CITRUS_JUICE:
         return chrono::seconds{ 30 };
-    case FoodType::WATER:
+    case FoodName::WATER:
         return chrono::seconds{ 30 };
     default:
         return chrono::seconds{ 0 };
@@ -90,36 +116,36 @@ chrono::seconds Food::getPreparationTime() const noexcept
 
 chrono::seconds Food::getCookingTime() const noexcept
 {
-    switch (type_) {
-    case FoodType::PEPPERONI:
+    switch (name_) {
+    case FoodName::PEPPERONI:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::PEPPERONI_FRESH:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::DOUBLE_PEPPERONI:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::CHICKEN_BBQ:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::HAWAIIAN:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::FOUR_CHEESE:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::VEGAN_HOT:
+        return chrono::seconds{ 60 * 5 };
+    case FoodName::CLASSIC_WINGS:
         return chrono::seconds{ 60 * 6 };
-    case FoodType::PEPPERONI_FRESH:
+    case FoodName::BBQ_WINGS:
         return chrono::seconds{ 60 * 6 };
-    case FoodType::DOUBLE_PEPPERONI:
+    case FoodName::TERIYAKI_WINGS:
         return chrono::seconds{ 60 * 6 };
-    case FoodType::CHICKEN_BBQ:
-        return chrono::seconds{ 60 * 6 };
-    case FoodType::HAWAIIAN:
-        return chrono::seconds{ 60 * 6 };
-    case FoodType::FOUR_CHEESE:
-        return chrono::seconds{ 60 * 6 };
-    case FoodType::VEGAN_HOT:
-        return chrono::seconds{ 60 * 6 };
-    case FoodType::CLASSIC_WINGS:
-        return chrono::seconds{ 60 * 8 };
-    case FoodType::BBQ_WINGS:
-        return chrono::seconds{ 60 * 8 };
-    case FoodType::TERIYAKI_WINGS:
-        return chrono::seconds{ 60 * 8 };
-    case FoodType::VEGAN_NUGGETS:
+    case FoodName::VEGAN_NUGGETS:
         return chrono::seconds{ 60 * 2 + 40 };
-    case FoodType::CHICKEN_STRIPS:
+    case FoodName::CHICKEN_STRIPS:
         return chrono::seconds{ 60 * 5 + 10 };
-    case FoodType::COLA:
+    case FoodName::COLA:
         return chrono::seconds{ 0 };
-    case FoodType::CITRUS_JUICE:
+    case FoodName::CITRUS_JUICE:
         return chrono::seconds{ 0 };
-    case FoodType::WATER:
+    case FoodName::WATER:
         return chrono::seconds{ 0 };
     default:
         return chrono::seconds{ 0 };

@@ -17,7 +17,7 @@ using namespace std;
 Delivery::Delivery()
     :
     ms_             { nullptr },
-    ordDeliv_       {},
+    orders_         {},
     couriers_       {}
 {}
 
@@ -41,7 +41,7 @@ void Delivery::deliveryOrder(Order* order)
 {
     assert(order != nullptr);
     order->setStatus(OrderStatus::WAITING_FOR_DELIVERY);
-    ordDeliv_.push_back(order);
+    orders_.push_back(order);
 }
 
 void Delivery::addCourier(Courier* courier)
@@ -83,7 +83,7 @@ Courier* Delivery::getFreeCourier() const
 vector<Order*> Delivery::getWaitingOrders() const
 {
     vector<Order*> wo{};
-    for (Order* o : ordDeliv_) {
+    for (Order* o : orders_) {
         assert(o != nullptr);
         if (o->getStatus() == OrderStatus::WAITING_FOR_DELIVERY) {
             wo.push_back(o);
@@ -94,11 +94,11 @@ vector<Order*> Delivery::getWaitingOrders() const
 
 void Delivery::deleteCompletedOrders()
 {
-    for (int i = 0; i < ordDeliv_.size(); ++i) {
-        Order* o{ ordDeliv_[i] };
+    for (int i = 0; i < orders_.size(); ++i) {
+        Order* o{ orders_[i] };
         assert(o != nullptr);
         if (o->getStatus() == OrderStatus::PAYMENT_COMPLETED) {
-            cmn::extractWithShift(ordDeliv_, i);
+            cmn::extractWithShift(orders_, i);
             ms_->processOrder(o);
         }
     }

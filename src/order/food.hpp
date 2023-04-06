@@ -13,9 +13,9 @@
 
 namespace ds {
 
-enum class FoodType : char {
+enum class FoodName : char {
     __INVALID = -1,                 /// invalid, must be the first
-    // vvv TYPES vvv
+    // vvv NAMES vvv
     /// PIZZA
     PEPPERONI,
     PEPPERONI_FRESH,
@@ -34,6 +34,17 @@ enum class FoodType : char {
     COLA,
     CITRUS_JUICE,
     WATER,
+    // ^^^ NAMES ^^^
+    __NUMBER_OF,
+    __END                           /// must be the last
+};
+
+enum class FoodType : char {
+    __INVALID = -1,                 /// invalid, must be the first
+    // vvv TYPES vvv
+    PIZZA,
+    SIDES,
+    DRINKS,
     // ^^^ TYPES ^^^
     __NUMBER_OF,
     __END                           /// must be the last
@@ -50,14 +61,17 @@ enum class FoodStatus : char {
     __END                           /// must be the last
 };
 
-std::string toString(FoodType value);
+std::string toString(FoodName value);
 
 ///************************************************************************************************
 
 class Food {
 public:
-    Food(unsigned short number, const FoodType type) noexcept
-        : number_{ number }, type_{ type }, status_{ FoodStatus::__INVALID } {}
+    static constexpr std::chrono::seconds doughTime_{ 60 * 2 + 30 };
+
+public:
+    Food(unsigned short quantity, const FoodName name) noexcept
+        : qty_{ quantity }, name_{ name }, status_{ FoodStatus::__INVALID } {}
 
     Food(const Food&) = delete;
     Food& operator=(const Food&) = delete;
@@ -67,11 +81,13 @@ public:
     virtual ~Food() noexcept {}
 
 public:
-    unsigned short getNumber() const noexcept { return number_; }
+    unsigned short getQuantity() const noexcept { return qty_; }
 
-    void setNumber(unsigned short number) noexcept { number_ = number; }
+    void setQuantity(unsigned short quantity) noexcept { qty_ = quantity; }
 
-    FoodType getType() const noexcept { return type_; }
+    FoodName getName() const noexcept { return name_; }
+
+    FoodType getType() const noexcept;
 
     FoodStatus getStatus() const noexcept { return status_; }
 
@@ -84,8 +100,8 @@ public:
     std::chrono::seconds getTotalTime() const noexcept;
 
 private:
-    unsigned short                              number_;
-    const FoodType                              type_;
+    unsigned short                              qty_;
+    const FoodName                              name_;
     FoodStatus                                  status_;
 };
 

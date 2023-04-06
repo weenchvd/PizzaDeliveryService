@@ -37,9 +37,9 @@ public:
 
     void setManagmentSystem(ManagmentSystem* ms) { ms_ = ms; }
 
-    auto getOrders() const { return std::pair{ ordDeliv_.cbegin(), ordDeliv_.cend() }; }
+    auto getOrders() const { return std::pair{ orders_.cbegin(), orders_.cend() }; }
 
-    auto getOrders() { return std::pair{ ordDeliv_.begin(), ordDeliv_.end() }; }
+    //auto getOrders() { return std::pair{ orders_.begin(), orders_.end() }; }
 
 private:
     Courier* getFreeCourier() const;
@@ -52,8 +52,8 @@ private:
 
 private:
     ManagmentSystem*                            ms_;
-    std::vector<Order*>                         ordDeliv_;      // current orders with "Delivering" status
-    std::vector<Courier*>                       couriers_;      // active couriers
+    std::vector<Order*>                         orders_;        // current orders in delivery
+    std::vector<Courier*>                       couriers_;      // working couriers
 };
 
 } // namespace ds

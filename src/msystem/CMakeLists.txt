@@ -22,9 +22,11 @@ add_library(${LIBRARY_NAME} STATIC ${SOURCE_CXX_LIST})
 
 target_include_directories(${LIBRARY_NAME}
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
+                           PUBLIC "${BOOST_LIB_INCLUDE_DIR}/boost-1_81"
 )
 
 target_link_libraries(${LIBRARY_NAME}
+                      PUBLIC "${BOOST_LIB_LIST}"
                       PUBLIC common
                       PUBLIC courier
                       PUBLIC map

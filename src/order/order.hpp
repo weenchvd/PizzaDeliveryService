@@ -20,8 +20,9 @@ namespace ds {
 enum class OrderID : unsigned long long int {};
 
 enum class OrderStatus : char {
-    INVALID = -1,
-
+    __INVALID = -1,                 /// invalid, must be the first
+    // vvv STATUSES vvv
+    CANCELLED,
     ACCEPTED,
     WAITING_FOR_COOKING,
     COOKING,
@@ -33,7 +34,9 @@ enum class OrderStatus : char {
     PAYMENT,
     PAYMENT_COMPLETED,
     COMPLETED,
-    CANCELLED
+    // ^^^ STATUSES ^^^
+    __NUMBER_OF,
+    __END                           /// must be the last
 };
 
 std::string toString(OrderStatus value);
@@ -66,6 +69,8 @@ public:
     void setTimeEnd(time_point_t timeEnd) { timeEnd_ = timeEnd; }
 
     const std::vector<Food>& getFood() const noexcept { return food_; }
+
+    std::vector<Food>& getFood() noexcept { return food_; }
 
     void setFood(std::vector<Food> food);
 

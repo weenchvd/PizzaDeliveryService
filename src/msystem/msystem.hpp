@@ -62,18 +62,19 @@ public:
 
     auto getOrders() const { return std::pair{ orders_.cbegin(), orders_.cend() }; }
 
-    auto getOrders() { return std::pair{ orders_.begin(), orders_.end() }; }
+    //auto getOrders() { return std::pair{ orders_.begin(), orders_.end() }; }
 
     auto getCouriers() const { return std::pair{ couriers_.cbegin(), couriers_.cend() }; }
 
-    auto getCouriers() { return std::pair{ couriers_.begin(), couriers_.end() }; }
+    //auto getCouriers() { return std::pair{ couriers_.begin(), couriers_.end() }; }
 
-    Courier* activateCourier(CourierID courierID);
+    Courier* activateCourier(WorkerID workerID);
 
-    bool deactivateCourier(CourierID courierID);
+    bool deactivateCourier(WorkerID workerID);
 
-private:
-    std::vector<Food> createRandomFood() const;
+    Kitchener* activateKitchener(WorkerID workerID, KitchenerType type);
+
+    bool deactivateKitchener(WorkerID workerID);
 
 private:
     Map&                                        map_;
@@ -82,6 +83,7 @@ private:
     Delivery&                                   delivery_;
     std::vector<std::unique_ptr<Order>>         orders_;
     std::vector<std::unique_ptr<Courier>>       couriers_;
+    std::vector<std::unique_ptr<Kitchener>>     kitcheners_;
     time_point_t                                startTime_;     // program start time
     std::chrono::nanoseconds                    passedTime_;    // time passed since startTime_
     OrderID                                     nextOrderID_;
@@ -94,6 +96,10 @@ inline void ManagmentSystem::setCurrentTime() noexcept
     passedTime_ = std::chrono::nanoseconds{ 0 };
     startTime_ = std::chrono::system_clock::now();
 }
+
+///************************************************************************************************
+
+std::vector<Food> createRandomFood();
 
 } // namespace ds
 

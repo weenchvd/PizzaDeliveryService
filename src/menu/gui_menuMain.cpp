@@ -86,14 +86,12 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
             const unsigned int width{ 8 };
             const char filler{ '0' };
 
-            ImGui::TextUnformatted("Orders in the \"Cooking\" status (top - last)");
+            ImGui::TextUnformatted("Orders in the \"Cooking\" status (top - first)");
             if (ImGui::BeginListBox("Cooking orders",
                 ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() + 2)))
             {
                 auto cookOrders{ ms.kitchen().getOrders() };
-                vector<Order*>::const_iterator iter{ cookOrders.second };
-                while (iter != cookOrders.first) {
-                    --iter;
+                for (auto iter{ cookOrders.first }; iter != cookOrders.second; ++iter) {
                     ostringstream oss;
                     oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
                         << " - " << toString((*iter)->getStatus());
@@ -102,14 +100,12 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                 ImGui::EndListBox();
             }
 
-            ImGui::TextUnformatted("Orders with the \"Delivery\" status (top - last)");
+            ImGui::TextUnformatted("Orders with the \"Delivery\" status (top - first)");
             if (ImGui::BeginListBox("Delivery orders",
                 ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() + 2)))
             {
                 auto delivOrders{ ms.delivery().getOrders() };
-                vector<Order*>::const_iterator iter{ delivOrders.second };
-                while (iter != delivOrders.first) {
-                    --iter;
+                for (auto iter{ delivOrders.first }; iter != delivOrders.second; ++iter) {
                     ostringstream oss;
                     oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
                         << " - " << toString((*iter)->getStatus());

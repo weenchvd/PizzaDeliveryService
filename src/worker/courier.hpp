@@ -10,6 +10,7 @@
 #include"imgui.h"
 #include"map.hpp"
 #include"order.hpp"
+#include"worker.hpp"
 #include<assert.h>
 #include<chrono>
 #include<memory>
@@ -17,18 +18,20 @@
 
 namespace ds {
 
-enum class CourierID : unsigned int {};
-
-enum class CourierStatus : char
-{
-    INVALID = -1,
-
+enum class CourierStatus : char {
+    __INVALID = -1,                 /// invalid, must be the first
+    // vvv STATUSES vvv
     WAITING_FOR_NEXT,
     ACCEPTING_ORDER,
     MOVEMENT_TO_CUSTOMER,
     DELIVERY_AND_PAYMENT,
-    RETURNING_TO_OFFICE
+    RETURNING_TO_OFFICE,
+    // ^^^ STATUSES ^^^
+    __NUMBER_OF,
+    __END                           /// must be the last
 };
+
+///************************************************************************************************
 
 class ManagmentSystem;
 
@@ -42,7 +45,7 @@ public:
     friend class CourierReturning;
 
 public:
-    Courier(ManagmentSystem& ms, CourierID courierID);
+    Courier(ManagmentSystem& ms, WorkerID workerID);
 
     Courier(const Courier&) = delete;
     Courier& operator=(const Courier&) = delete;
@@ -54,7 +57,7 @@ public:
 
     virtual CourierStatus getStatus() const;
 
-    CourierID getID() const { return id_; }
+    WorkerID getID() const { return id_; }
 
     ImVec2 getLocation() const { return curLocation_; }
 
@@ -75,7 +78,7 @@ private:
     std::unique_ptr<RouteList>                  routeList_;
     std::chrono::nanoseconds                    waitingTime_;
     ImVec2                                      curLocation_;
-    CourierID                                   id_;
+    WorkerID                                    id_;
     CourierStatus                               prevStatus_;
     bool                                        isDelivering_;
 };
@@ -89,7 +92,7 @@ protected:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::INVALID; }
+    virtual CourierStatus getStatus() const { return CourierStatus::__INVALID; }
 
 protected:
     void changeState(Courier& courier, CourierState& state) { courier.changeState(state); }

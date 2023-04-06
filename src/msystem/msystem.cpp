@@ -21,6 +21,7 @@ ManagmentSystem::ManagmentSystem(Map& map, Scheduler& scheduler, Kitchen& kitche
     delivery_           { delivery },
     orders_             {},
     couriers_           {},
+    kitcheners_         {},
     startTime_          { chrono::system_clock::now() },
     passedTime_         { 0 },
     nextOrderID_        { 0 }
@@ -53,51 +54,79 @@ ManagmentSystem::time_point_t ManagmentSystem::getCurrentTime() const noexcept
     return startTime_ + chrono::duration_cast<time_point_t::duration>(passedTime_);
 }
 
-Courier* ManagmentSystem::activateCourier(CourierID courierID)
+Courier* ManagmentSystem::activateCourier(WorkerID workerID)
 {
-    for (int i = 0; i < couriers_.size(); ++i) {
-        if (couriers_[i]->getID() == courierID) {
+    for (const auto& courier : couriers_) {
+        if (courier->getID() == workerID) {
             return nullptr;
         }
     }
-    unique_ptr<Courier> newCourier{ new Courier{ *this, courierID } };
+    unique_ptr<Courier> newCourier{ new Courier{ *this, workerID } };
     couriers_.push_back(std::move(newCourier));
     Courier* c{ couriers_.back().get() };
     delivery_.addCourier(c);
     return c;
 }
 
-bool ManagmentSystem::deactivateCourier(CourierID courierID)
+bool ManagmentSystem::deactivateCourier(WorkerID workerID)
 {
-    for (int i = 0; i < couriers_.size(); ++i) {
-        if (couriers_[i]->getID() == courierID) {
-            swap(couriers_[i], couriers_.back());
-            delivery_.deleteCourier(couriers_.back().get());
-            couriers_.pop_back();
+    for (auto iter{ couriers_.begin() }; iter != couriers_.end(); ++iter) {
+        if (iter->get()->getID() == workerID) {
+            delivery_.deleteCourier(iter->get());
+            couriers_.erase(iter);
             return true;
         }
     }
     return false;
 }
 
-vector<Food> ManagmentSystem::createRandomFood() const
+Kitchener* ManagmentSystem::activateKitchener(WorkerID workerID, KitchenerType type)
+{
+    for (const auto& kitchener : kitcheners_) {
+        if (kitchener->getID() == workerID) {
+            return nullptr;
+        }
+    }
+    unique_ptr<Kitchener> newKitchener{ new Kitchener{ *this, workerID, type } };
+    kitcheners_.push_back(std::move(newKitchener));
+    Kitchener* k{ kitcheners_.back().get() };
+    kitchen_.addKitchener(k);
+    return k;
+}
+
+bool ManagmentSystem::deactivateKitchener(WorkerID workerID)
+{
+    for (auto iter{ kitcheners_.begin() }; iter != kitcheners_.end(); ++iter) {
+        if (iter->get()->getID() == workerID) {
+            kitchen_.deleteKitchener(iter->get());
+            kitcheners_.erase(iter);
+            return true;
+        }
+    }
+    return false;
+}
+
+///************************************************************************************************
+
+vector<Food> createRandomFood()
 {
     vector<Food> food;
     int n{ cmn::getRandomNumber(1, 6) };
     for (int i = 0; i < n; ++i) {
-        FoodType type{ char(cmn::getRandomNumber(
-            cmn::toUnderlying(cmn::firstEnum<FoodType>()),
-            cmn::toUnderlying(cmn::lastEnum<FoodType>())
+        FoodName name{ char(cmn::getRandomNumber(
+            cmn::toUnderlying(cmn::firstEnum<FoodName>()),
+            cmn::toUnderlying(cmn::lastEnum<FoodName>())
         ))};
         bool isExist{ false };
         for (const auto& f : food) {
-            if (f.getType() == type) {
+            if (f.getName() == name) {
                 isExist = true;
                 break;
             }
         }
         if (isExist == false) {
-            food.push_back(Food{ unsigned short(cmn::getRandomNumber(1, 3)), type });
+            food.push_back(Food{ unsigned short(cmn::getRandomNumber(1, 3)), name });
+            food.back().setStatus(FoodStatus::WAITING_FOR_MAKING);
         }
     }
     return food;

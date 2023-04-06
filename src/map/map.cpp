@@ -43,6 +43,8 @@ Map::Map()
     add_vertex(GraphVertexPropertyMap(numVPM++, Map::maxDelTime_, 200, 200), g_);
     add_vertex(GraphVertexPropertyMap(numVPM++, Map::maxDelTime_, 0, 200), g_);
     add_vertex(GraphVertexPropertyMap(numVPM++, Map::maxDelTime_, 100, 100), g_);
+    add_vertex(GraphVertexPropertyMap(numVPM++, Map::maxDelTime_, 150, 50), g_);
+    add_vertex(GraphVertexPropertyMap(numVPM++, Map::maxDelTime_, 250, 50), g_);
 
     int numEPM{ 0 };
     int distance{ 0 };
@@ -64,6 +66,17 @@ Map::Map()
     add_edge(5, 3, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
     distance = calcDistance(*this, 1, 3);
     add_edge(1, 3, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
+    distance = calcDistance(*this, 0, 6);
+    add_edge(0, 6, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
+    add_edge(6, 0, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
+    distance = calcDistance(*this, 1, 6);
+    add_edge(1, 6, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
+    distance = calcDistance(*this, 6, 5);
+    add_edge(6, 5, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
+    distance = calcDistance(*this, 6, 7);
+    add_edge(6, 7, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
+    distance = calcDistance(*this, 7, 1);
+    add_edge(7, 1, GraphEdgePropertyMap(numEPM++, distance, distance / Map::avgSpeed_), g_);
 }
 
 std::vector<Graph::edge_descriptor> Map::getPath(size_t srcVertex, size_t tgtVertex)

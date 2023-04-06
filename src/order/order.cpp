@@ -15,8 +15,10 @@ using namespace std;
 string toString(OrderStatus value)
 {
     switch (value) {
-    case OrderStatus::INVALID:
+    case OrderStatus::__INVALID:
         return u8"INVALID STATUS";
+    case OrderStatus::CANCELLED:
+        return u8"Cancelled";
     case OrderStatus::ACCEPTED:
         return u8"Accepted";
     case OrderStatus::WAITING_FOR_COOKING:
@@ -39,8 +41,6 @@ string toString(OrderStatus value)
         return u8"Payment completed";
     case OrderStatus::COMPLETED:
         return u8"Completed";
-    case OrderStatus::CANCELLED:
-        return u8"Cancelled";
     default:
         return u8"UNKNOWN";
     }
@@ -55,7 +55,7 @@ Order::Order(const OrderID orderID, const size_t target, const time_point_t time
     timeStart_      { timeStart },
     timeEnd_        { timeStart },
     food_           {},
-    status_         { OrderStatus::INVALID }
+    status_         { OrderStatus::__INVALID }
 {}
 
 void Order::setFood(std::vector<Food> food)

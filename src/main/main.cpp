@@ -22,6 +22,36 @@
 #include<thread>
 #include<vector>
 
+bool createOrder(std::chrono::nanoseconds elapsedTime)
+{
+    using namespace std::chrono;
+    constexpr unsigned int chance{ 5 };
+    constexpr unsigned int step{ 2 };
+    constexpr unsigned int stepBig{ step * 5 };
+    constexpr unsigned int from{ 1 };
+    static unsigned int to{ 50 };
+    constexpr unsigned int toMin{ 10 };
+    constexpr unsigned int toMax{ 100 };
+    static nanoseconds time{ 0 };
+    time += elapsedTime;
+    if (time >= seconds{ 60 }) {
+        time = nanoseconds{ 0 };
+        const auto random{ cmn::getRandomNumber(from, to) };
+        if (random >= from && random <= chance) {
+            if (to <= toMax - stepBig) {
+                to += stepBig;
+            }
+            return true;
+        }
+        else {
+            if (to >= toMin + step) {
+                to -= step;
+            }
+        }
+    }
+    return false;
+}
+
 int main(int argc, char* argv[])
 {
     using namespace std;
@@ -42,19 +72,12 @@ int main(int argc, char* argv[])
         kitchen.setManagmentSystem(&ms);
         delivery.setManagmentSystem(&ms);
 
-        ms.activateCourier(ds::CourierID{ 0 });
-        ms.activateCourier(ds::CourierID{ 1 });
-        ms.activateCourier(ds::CourierID{ 2 });
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
-        ms.createOrder();
+        ms.activateKitchener(ds::WorkerID{ 11 }, ds::KitchenerType::DOUGH);
+        ms.activateKitchener(ds::WorkerID{ 12 }, ds::KitchenerType::FILLING);
+        ms.activateKitchener(ds::WorkerID{ 13 }, ds::KitchenerType::PICKER);
+        ms.activateCourier(ds::WorkerID{ 0 });
+        ms.activateCourier(ds::WorkerID{ 1 });
+        ms.activateCourier(ds::WorkerID{ 2 });
         ms.createOrder();
         ms.createOrder();
 
@@ -70,6 +93,10 @@ int main(int argc, char* argv[])
             const auto frameStart{ chrono::steady_clock::now() };
             auto elapsedTime{ frameStart - prevFS };
             prevFS = frameStart;
+
+            if (createOrder(elapsedTime * ds::Options::instance().timeSpeed_)) {
+                ms.createOrder();
+            }
 
             ms.update(elapsedTime * ds::Options::instance().timeSpeed_);
             renderGUI(&showGuiMenuMain, ms);

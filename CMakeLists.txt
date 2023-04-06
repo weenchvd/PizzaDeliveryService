@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project("PizzaDeliveryService"  VERSION 0.2.0)
+project("PizzaDeliveryService"  VERSION 0.3.0)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 

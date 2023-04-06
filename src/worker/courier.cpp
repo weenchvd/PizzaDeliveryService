@@ -22,15 +22,15 @@ CourierReturning        CourierReturning::state_{};
 
 ///************************************************************************************************
 
-Courier::Courier(ManagmentSystem& ms, CourierID courierID)
+Courier::Courier(ManagmentSystem& ms, WorkerID workerID)
     :
     state_          { &CourierWaiting::instance() },
     ms_             { ms },
     routeList_      { nullptr },
     waitingTime_    { 0 },
     curLocation_    { 0.0f, 0.0f },
-    id_             { courierID },
-    prevStatus_     { CourierStatus::INVALID },
+    id_             { workerID },
+    prevStatus_     { CourierStatus::__INVALID },
     isDelivering_   { false }
 {}
 
