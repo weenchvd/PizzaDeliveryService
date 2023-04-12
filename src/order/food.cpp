@@ -104,11 +104,11 @@ chrono::seconds Food::getPreparationTime() const noexcept
     case FoodName::CHICKEN_STRIPS:
         return chrono::seconds{ 60 };
     case FoodName::COLA:
-        return chrono::seconds{ 30 };
+        return chrono::seconds{ 0 };
     case FoodName::CITRUS_JUICE:
-        return chrono::seconds{ 30 };
+        return chrono::seconds{ 0 };
     case FoodName::WATER:
-        return chrono::seconds{ 30 };
+        return chrono::seconds{ 0 };
     default:
         return chrono::seconds{ 0 };
     }
@@ -142,11 +142,11 @@ chrono::seconds Food::getCookingTime() const noexcept
     case FoodName::CHICKEN_STRIPS:
         return chrono::seconds{ 60 * 5 + 10 };
     case FoodName::COLA:
-        return chrono::seconds{ 0 };
+        return chrono::seconds{ 30 };
     case FoodName::CITRUS_JUICE:
-        return chrono::seconds{ 0 };
+        return chrono::seconds{ 30 };
     case FoodName::WATER:
-        return chrono::seconds{ 0 };
+        return chrono::seconds{ 30 };
     default:
         return chrono::seconds{ 0 };
     }

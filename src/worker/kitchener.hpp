@@ -166,7 +166,6 @@ inline void Kitchener::makeFood(Food* food)
 {
     assert(this->getStatus() == KitchenerStatus::WAITING_FOR_NEXT);
     food_ = food;
-    this->changeState(KitchenerMaking::instance());
 }
 
 inline void KitchenerState::update(Kitchener& kitchener, std::chrono::nanoseconds passedTime)

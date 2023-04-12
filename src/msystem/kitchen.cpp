@@ -165,7 +165,7 @@ void Kitchen::pushFrontQueue(std::vector<Food*>& queue, Food* food)
     OrderID orderID{ this->getOrder(food).getID() };
     auto iter{ queue.cbegin() };
     for (; iter != queue.cend(); ++iter) {
-        if (orderID >= this->getOrder(*iter).getID()) {
+        if (orderID < this->getOrder(*iter).getID()) {
             break;
         }
     }

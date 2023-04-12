@@ -38,14 +38,15 @@ void KitchenerInaccessible::update(Kitchener& kitchener, std::chrono::nanosecond
 {
     assert(kitchener.food_ == nullptr);
     if (kitchener.prevStatus_ != KitchenerStatus::INACCESSIBLE) {
-        kitchener.passedTime_ = chrono::seconds{ 0 };
-        kitchener.makingTime_ = chrono::seconds{
-            cmn::getRandomNumber(Options::minPauseTime_, Options::maxPauseTime_)
-        };
+        int random{ cmn::getRandomNumber(1, 100) };
+        kitchener.makingTime_ = (random >= 1 && random <= Options::pauseChance_) ?
+            chrono::seconds{ cmn::getRandomNumber(Options::minPauseTime_, Options::maxPauseTime_) } :
+            chrono::seconds{ 5 };
     }
     kitchener.prevStatus_ = KitchenerStatus::INACCESSIBLE;
     kitchener.passedTime_ += passedTime;
     if (kitchener.passedTime_ >= kitchener.makingTime_) {
+        kitchener.passedTime_ -= kitchener.makingTime_;
         this->changeState(kitchener, KitchenerWaiting::instance());
     }
 }
@@ -53,17 +54,21 @@ void KitchenerInaccessible::update(Kitchener& kitchener, std::chrono::nanosecond
 void KitchenerWaiting::update(Kitchener& kitchener, std::chrono::nanoseconds passedTime)
 {
     if (kitchener.prevStatus_ != KitchenerStatus::WAITING_FOR_NEXT) {
-        kitchener.passedTime_ = chrono::nanoseconds{ 0 };
+        kitchener.makingTime_ = chrono::nanoseconds{ 0 };
     }
     kitchener.prevStatus_ = KitchenerStatus::WAITING_FOR_NEXT;
     kitchener.passedTime_ += passedTime;
+    kitchener.makingTime_ += passedTime;
+    if (kitchener.food_ != nullptr) {
+        kitchener.passedTime_ -= kitchener.makingTime_;
+        this->changeState(kitchener, KitchenerMaking::instance());
+    }
 }
 
 void KitchenerMaking::update(Kitchener& kitchener, std::chrono::nanoseconds passedTime)
 {
+    assert(kitchener.food_ != nullptr);
     if (kitchener.prevStatus_ != KitchenerStatus::MAKING) {
-        kitchener.passedTime_ = chrono::nanoseconds{ 0 };
-        assert(kitchener.food_ != nullptr);
         kitchener.food_->setStatus(FoodStatus::MAKING);
         switch (kitchener.getType()) {
         case KitchenerType::DOUGH:
@@ -102,14 +107,8 @@ void KitchenerMaking::update(Kitchener& kitchener, std::chrono::nanoseconds pass
             break;
         }
         kitchener.food_ = nullptr;
-
-        int random{ cmn::getRandomNumber(1, 100) };
-        if (random >= 1 && random <= Options::pauseChance_) {
-            this->changeState(kitchener, KitchenerInaccessible::instance());
-        }
-        else {
-            this->changeState(kitchener, KitchenerWaiting::instance());
-        }
+        kitchener.passedTime_ -= kitchener.makingTime_;
+        this->changeState(kitchener, KitchenerInaccessible::instance());
     }
 }
 

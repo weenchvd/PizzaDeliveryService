@@ -74,7 +74,10 @@ int main(int argc, char* argv[])
 
         ms.activateKitchener(ds::WorkerID{ 11 }, ds::KitchenerType::DOUGH);
         ms.activateKitchener(ds::WorkerID{ 12 }, ds::KitchenerType::FILLING);
-        ms.activateKitchener(ds::WorkerID{ 13 }, ds::KitchenerType::PICKER);
+        ms.activateKitchener(ds::WorkerID{ 13 }, ds::KitchenerType::FILLING);
+        ms.activateKitchener(ds::WorkerID{ 14 }, ds::KitchenerType::PICKER);
+        ms.activateKitchener(ds::WorkerID{ 15 }, ds::KitchenerType::PICKER);
+        ms.activateKitchener(ds::WorkerID{ 16 }, ds::KitchenerType::PICKER);
         ms.activateCourier(ds::WorkerID{ 0 });
         ms.activateCourier(ds::WorkerID{ 1 });
         ms.activateCourier(ds::WorkerID{ 2 });
