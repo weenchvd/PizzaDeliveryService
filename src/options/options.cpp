@@ -14,11 +14,32 @@ Options Options::uniqueInstance_{};
 
 ///************************************************************************************************
 
+OptionsCourier::OptionsCourier()
+    :
+    pauseTime_          { defPauseTime_ },
+    pauseChance_        { defPauseChance_ },
+    acceptanceTime_     { defAcceptanceTime_ },
+    deliveryTime_       { defDeliveryTime_ },
+    paymentTime_        { defPaymentTime_ }
+{
+    static_assert(defInaccessibleTime_ >= 0);
+    static_assert(minPauseTime_ > 0);
+    static_assert(defPauseTime_ >= minPauseTime_ && defPauseTime_ <= maxPauseTime_);
+    static_assert(minPauseChance_ >= 0);
+    static_assert(defPauseChance_ >= minPauseChance_ && defPauseChance_ <= maxPauseChance_);
+    static_assert(minAcceptanceTime_ > 0);
+    static_assert(defAcceptanceTime_ >= minAcceptanceTime_ && defAcceptanceTime_ <= maxAcceptanceTime_);
+    static_assert(minDeliveryTime_ > 0);
+    static_assert(defDeliveryTime_ >= minDeliveryTime_ && defDeliveryTime_ <= maxDeliveryTime_);
+    static_assert(minPaymentTime_ > 0);
+    static_assert(defPaymentTime_ >= minPaymentTime_ && defPaymentTime_ <= maxPaymentTime_);
+}
+
 Options::Options()
     :
+    optCourier_         {},
     fps_                { defFPS_ },
     timeSpeed_          { defTimeSpeed_ },
-    paymentTime_        { defPaymentTime_ },
     checkTimeFreeCour_  { defCheckTimeFreeCour_ },
     vertexRadius_       { defVertexRadius_},
     edgeWidth_          { defEdgeWidth_ }
@@ -27,8 +48,6 @@ Options::Options()
     static_assert(defFPS_ >= minFPS_ && defFPS_ <= maxFPS_);
     static_assert(minTimeSpeed_ > 0);
     static_assert(defTimeSpeed_ >= minTimeSpeed_ && defTimeSpeed_ <= maxTimeSpeed_);
-    static_assert(minPaymentTime_ > 0);
-    static_assert(defPaymentTime_ >= minPaymentTime_ && defPaymentTime_ <= maxPaymentTime_);
     static_assert(minCheckTimeFreeCour_ > 0);
     static_assert(defCheckTimeFreeCour_ >= minCheckTimeFreeCour_
         && defCheckTimeFreeCour_ <= maxCheckTimeFreeCour_);

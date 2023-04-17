@@ -14,10 +14,35 @@ namespace ds {
 
 using namespace std;
 
+string toString(CourierStatus value)
+{
+    switch (value) {
+    case CourierStatus::__INVALID:
+        return u8"INVALID STATUS";
+    case CourierStatus::INACCESSIBLE:
+        return u8"Inaccessible";
+    case CourierStatus::WAITING_FOR_NEXT:
+        return u8"Waiting for next";
+    case CourierStatus::ACCEPTING_ORDER:
+        return u8"Accepting order";
+    case CourierStatus::MOVEMENT_TO_CUSTOMER:
+        return u8"Movement to customer";
+    case CourierStatus::DELIVERY_AND_PAYMENT:
+        return u8"Delivery and payment";
+    case CourierStatus::RETURNING_TO_OFFICE:
+        return u8"Returning to office";
+    default:
+        return u8"UNKNOWN";
+    }
+}
+
+///************************************************************************************************
+
+CourierInaccessible     CourierInaccessible::state_{};
 CourierWaiting          CourierWaiting::state_{};
 CourierAccepting        CourierAccepting::state_{};
 CourierMovement         CourierMovement::state_{};
-CourierPayment          CourierPayment::state_{};
+CourierDeliveryPayment  CourierDeliveryPayment::state_{};
 CourierReturning        CourierReturning::state_{};
 
 ///************************************************************************************************
@@ -26,141 +51,193 @@ Courier::Courier(ManagmentSystem& ms, WorkerID workerID)
     :
     state_          { &CourierWaiting::instance() },
     ms_             { ms },
-    routeList_      { nullptr },
-    waitingTime_    { 0 },
-    curLocation_    { 0.0f, 0.0f },
+    route_          { nullptr },
+    passedTime_     { 0 },
+    makingTime_     { 0 },
+    curEdge_        {},
+    passedDist_     { 0 },
+    fullDist_       { 0 },
+    curLocation_    { Courier::getInaccessibleLocation() },
     id_             { workerID },
-    prevStatus_     { CourierStatus::__INVALID },
-    isDelivering_   { false }
+    prevStatus_     { CourierStatus::__INVALID }
 {}
 
-void Courier::setRouteList(Order* order, std::vector<Graph::edge_descriptor> path)
-{
-    unique_ptr<RouteList> newRL{ new RouteList{ ms_, order, std::move(path) } };
-    routeList_ = move(newRL);
-    changeState(CourierAccepting::instance());
-}
-
-ImVec2 Courier::getOfficeLocation() const
+inline ImVec2 Courier::getLocation(size_t target) const
 {
     return ImVec2{
-        float(ms_.map().graph().m_vertices[ms_.scheduler().getOffice()].m_property.x_),
-        float(ms_.map().graph().m_vertices[ms_.scheduler().getOffice()].m_property.y_)
+        float(ms_.map().graph().m_vertices[target].m_property.x_),
+        float(ms_.map().graph().m_vertices[target].m_property.y_)
     };
+}
+
+inline ImVec2 Courier::getOfficeLocation() const
+{
+    return getLocation(ms_.scheduler().getOffice());
+}
+
+inline long long int Courier::calculateFullDistance() const
+{
+    const auto& edge{ *curEdge_ };
+    return ms_.map().graph()[edge].distance_ * nano::den;
+}
+
+ImVec2 Courier::calculateCurrentLocation()
+{
+    const double t{ double(passedDist_) / fullDist_ };
+    const auto& graph{ ms_.map().graph() };
+    const auto& edge{ *curEdge_ };
+    const int x{ int(
+        graph[edge.m_source].x_ + (graph[edge.m_target].x_ - graph[edge.m_source].x_) * t
+    ) };
+    const int y{ int(
+        graph[edge.m_source].y_ + (graph[edge.m_target].y_ - graph[edge.m_source].y_) * t
+    ) };
+    return ImVec2{ float(x), float(y) };
 }
 
 ///************************************************************************************************
 
+void CourierInaccessible::update(Courier& courier, std::chrono::nanoseconds passedTime)
+{
+    if (courier.prevStatus_ != CourierStatus::INACCESSIBLE) {
+        courier.prevStatus_ = CourierStatus::INACCESSIBLE;
+        courier.curLocation_ = courier.getInaccessibleLocation();
+        courier.route_.reset();
+        courier.curEdge_ = Courier::edge_const_iterator_t{};
+        int random{ cmn::getRandomNumber(1, 100) };
+        courier.makingTime_ =
+            (random >= 1 && random <= Options::instance().optCourier_.pauseChance_) ?
+            chrono::seconds{ cmn::getRandomNumber(
+                    OptionsCourier::minPauseTime_,
+                    Options::instance().optCourier_.pauseTime_
+            )} :
+            chrono::seconds{ OptionsCourier::defInaccessibleTime_ };
+    }
+    courier.passedTime_ += passedTime;
+    if (courier.passedTime_ >= courier.makingTime_) {
+        courier.passedTime_ -= courier.makingTime_;
+        this->changeState(courier, CourierWaiting::instance());
+    }
+}
+
 void CourierWaiting::update(Courier& courier, std::chrono::nanoseconds passedTime)
 {
     if (courier.prevStatus_ != CourierStatus::WAITING_FOR_NEXT) {
-        courier.waitingTime_ = chrono::nanoseconds{ 0 };
+        courier.prevStatus_ = CourierStatus::WAITING_FOR_NEXT;
+        courier.curLocation_ = courier.getOfficeLocation();
+        courier.makingTime_ = chrono::nanoseconds{ 0 };
     }
-    courier.prevStatus_ = CourierStatus::WAITING_FOR_NEXT;
-    courier.waitingTime_ += passedTime;
-    courier.curLocation_ = courier.getOfficeLocation();
+    courier.passedTime_ += passedTime;
+    courier.makingTime_ += passedTime;
+    if (courier.route_ != nullptr) {
+        courier.passedTime_ -= courier.makingTime_;
+        this->changeState(courier, CourierAccepting::instance());
+    }
 }
 
 void CourierAccepting::update(Courier& courier, std::chrono::nanoseconds passedTime)
 {
     if (courier.prevStatus_ != CourierStatus::ACCEPTING_ORDER) {
-        courier.routeList_->requiredTime_ += chrono::nanoseconds{
-            cmn::getRandomNumber(60 * 2, 60 * 4) * nano::den
-        };
-        courier.routeList_->order_->setStatus(OrderStatus::DELIVERING);
+        courier.prevStatus_ = CourierStatus::ACCEPTING_ORDER;
+        courier.curLocation_ = courier.getOfficeLocation();
+        courier.makingTime_ = chrono::seconds{ cmn::getRandomNumber(
+            OptionsCourier::minAcceptanceTime_,
+            Options::instance().optCourier_.acceptanceTime_
+        )};
+        courier.route_->getOrder()->setStatus(OrderStatus::DELIVERING);
     }
-    courier.prevStatus_ = CourierStatus::ACCEPTING_ORDER;
-    courier.routeList_->requiredTime_ -= passedTime;
-    if (courier.routeList_->requiredTime_.count() <= 0) {
-        courier.isDelivering_ = true;
+    courier.passedTime_ += passedTime;
+    if (courier.passedTime_ >= courier.makingTime_) {
+        courier.passedTime_ -= courier.makingTime_;
         this->changeState(courier, CourierMovement::instance());
     }
-    courier.curLocation_ = courier.getOfficeLocation();
 }
 
 void CourierMovement::update(Courier& courier, std::chrono::nanoseconds passedTime)
 {
     if (courier.prevStatus_ != CourierStatus::MOVEMENT_TO_CUSTOMER) {
-        courier.routeList_->passedDist_ = 0;
-        const auto& edge{ courier.routeList_->path_[courier.routeList_->curEdge_] };
-        courier.routeList_->fullDist_ = courier.ms_.map().graph()[edge].distance_ * nano::den;
+        courier.prevStatus_ = CourierStatus::MOVEMENT_TO_CUSTOMER;
+        courier.curEdge_ = courier.route_->getPath().cbegin();
+        courier.passedDist_ = 0;
+        courier.fullDist_ = courier.calculateFullDistance();
+        courier.makingTime_ = chrono::nanoseconds{ 0 };
     }
-    courier.prevStatus_ = CourierStatus::MOVEMENT_TO_CUSTOMER;
-    courier.routeList_->passedDist_ += passedTime.count() * Map::avgSpeed_;
-    if (courier.routeList_->passedDist_ >= courier.routeList_->fullDist_) {
-        ++courier.routeList_->curEdge_;
-        if (courier.routeList_->curEdge_ >= courier.routeList_->path_.size()) {
-            if (courier.isDelivering_) {
-                this->changeState(courier, CourierPayment::instance());
-            }
-            else {
-                this->changeState(courier, CourierWaiting::instance());
-            }
-            const auto target{
-                courier.routeList_->path_[courier.routeList_->path_.size() - 1].m_target
-            };
-            courier.curLocation_ = ImVec2 {
-                float(courier.ms_.map().graph().m_vertices[target].m_property.x_),
-                float(courier.ms_.map().graph().m_vertices[target].m_property.y_)
-            };
+    courier.passedTime_ += passedTime;
+    courier.makingTime_ += passedTime;
+    courier.passedDist_ += passedTime.count() * Map::avgSpeed_;
+    if (courier.passedDist_ >= courier.fullDist_) {
+        courier.passedDist_ -= courier.fullDist_;
+        if (courier.curEdge_ == --courier.route_->getPath().end()) {
+            courier.curLocation_ = courier.getLocation(courier.curEdge_->m_target);
+            courier.passedTime_ -= courier.makingTime_;
+            this->changeState(courier, CourierDeliveryPayment::instance());
             return;
         }
-        courier.routeList_->passedDist_ -= courier.routeList_->fullDist_;
-        const auto& edge{ courier.routeList_->path_[courier.routeList_->curEdge_] };
-        courier.routeList_->fullDist_ = courier.ms_.map().graph()[edge].distance_ * nano::den;
+        else {
+            ++courier.curEdge_;
+            courier.fullDist_ = courier.calculateFullDistance();
+        }
     }
-    const double t{ double(courier.routeList_->passedDist_) / courier.routeList_->fullDist_ };
-    const auto& g{ courier.ms_.map().graph() };
-    const auto& edge{ courier.routeList_->path_[courier.routeList_->curEdge_] };
-    const int x{
-        int(g[edge.m_source].x_ + (g[edge.m_target].x_ - g[edge.m_source].x_) * t)
-    };
-    const int y{
-        int(g[edge.m_source].y_ + (g[edge.m_target].y_ - g[edge.m_source].y_) * t)
-    };
-    courier.curLocation_ = ImVec2{ float(x), float(y) };
+    courier.curLocation_ = courier.calculateCurrentLocation();
 }
 
-void CourierPayment::update(Courier& courier, std::chrono::nanoseconds passedTime)
+void CourierDeliveryPayment::update(Courier& courier, std::chrono::nanoseconds passedTime)
 {
     if (courier.prevStatus_ != CourierStatus::DELIVERY_AND_PAYMENT) {
-        courier.routeList_->requiredTime_ += chrono::nanoseconds{
-            cmn::getRandomNumber(Options::minPaymentTime_, Options::instance().paymentTime_)
-            * nano::den
-        };
+        courier.prevStatus_ = CourierStatus::DELIVERY_AND_PAYMENT;
+        courier.curLocation_ = courier.getLocation(courier.curEdge_->m_target);
+        courier.makingTime_ = chrono::seconds{ cmn::getRandomNumber(
+            Options::instance().optCourier_.minDeliveryTime_,
+            Options::instance().optCourier_.deliveryTime_
+        ) };
     }
-    courier.prevStatus_ = CourierStatus::DELIVERY_AND_PAYMENT;
-    courier.routeList_->requiredTime_ -= passedTime;
-    if (courier.routeList_->requiredTime_.count() <= 0) {
-        //++courier.curEdge_;
-        //if (courier.curEdge_ < courier.path_.size()) {
-        //    this->changeState(courier, CourierMovement::instance());
-        //}
-        //else {
-        //    this->changeState(courier, CourierReturning::instance());
-        //}
-        courier.routeList_->order_->setStatus(OrderStatus::PAYMENT_COMPLETED);
-        this->changeState(courier, CourierReturning::instance());
+    courier.passedTime_ += passedTime;
+    if (courier.passedTime_ >= courier.makingTime_) {
+        courier.passedTime_ -= courier.makingTime_;
+        if (courier.route_->getOrder()->isPaid() == true) {
+            courier.route_->getOrder()->setStatus(OrderStatus::DELIVERING_COMPLETED);
+            this->changeState(courier, CourierReturning::instance());
+            return;
+        }
+        courier.makingTime_ = chrono::seconds{ cmn::getRandomNumber(
+            Options::instance().optCourier_.minPaymentTime_,
+            Options::instance().optCourier_.paymentTime_
+        ) };
+        courier.route_->getOrder()->setStatus(OrderStatus::PAYING);
+        courier.route_->getOrder()->isPaid(true);
     }
-    const auto target{ courier.routeList_->path_[courier.routeList_->path_.size() - 1].m_target};
-    courier.curLocation_ = ImVec2 {
-        float(courier.ms_.map().graph().m_vertices[target].m_property.x_),
-        float(courier.ms_.map().graph().m_vertices[target].m_property.y_)
-    };
 }
 
 void CourierReturning::update(Courier& courier, std::chrono::nanoseconds passedTime)
 {
-    const auto target{ courier.routeList_->path_[courier.routeList_->path_.size() - 1].m_target };
-    courier.routeList_->curEdge_ = 0;
-    courier.routeList_->path_ =
-        courier.ms_.map().getPath(target, courier.ms_.scheduler().getOffice());
-    courier.isDelivering_ = false;
-    this->changeState(courier, CourierMovement::instance());
-    courier.curLocation_ = ImVec2 {
-        float(courier.ms_.map().graph().m_vertices[target].m_property.x_),
-        float(courier.ms_.map().graph().m_vertices[target].m_property.y_)
-    };
+    if (courier.prevStatus_ != CourierStatus::RETURNING_TO_OFFICE) {
+        courier.prevStatus_ = CourierStatus::RETURNING_TO_OFFICE;
+        const auto source{ courier.curEdge_->m_target };
+        auto path{ courier.ms_.map().getPath(source, courier.ms_.scheduler().getOffice()) };
+        unique_ptr<Route> route{ new Route{ courier.ms_, nullptr, std::move(path) } };
+        courier.route_ = std::move(route);
+        courier.curEdge_ = courier.route_->getPath().cbegin();
+        courier.passedDist_ = 0;
+        courier.fullDist_ = courier.calculateFullDistance();
+        courier.makingTime_ = chrono::nanoseconds{ 0 };
+    }
+    courier.passedTime_ += passedTime;
+    courier.makingTime_ += passedTime;
+    courier.passedDist_ += passedTime.count() * Map::avgSpeed_;
+    if (courier.passedDist_ >= courier.fullDist_) {
+        courier.passedDist_ -= courier.fullDist_;
+        if (courier.curEdge_ == --courier.route_->getPath().end()) {
+            courier.curLocation_ = courier.getLocation(courier.curEdge_->m_target);
+            courier.passedTime_ -= courier.makingTime_;
+            this->changeState(courier, CourierInaccessible::instance());
+            return;
+        }
+        else {
+            ++courier.curEdge_;
+            courier.fullDist_ = courier.calculateFullDistance();
+        }
+    }
+    courier.curLocation_ = courier.calculateCurrentLocation();
 }
 
 } // namespace ds

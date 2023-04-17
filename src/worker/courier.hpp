@@ -13,6 +13,7 @@
 #include"worker.hpp"
 #include<assert.h>
 #include<chrono>
+#include<limits>
 #include<memory>
 #include<vector>
 
@@ -21,6 +22,7 @@ namespace ds {
 enum class CourierStatus : char {
     __INVALID = -1,                 /// invalid, must be the first
     // vvv STATUSES vvv
+    INACCESSIBLE,
     WAITING_FOR_NEXT,
     ACCEPTING_ORDER,
     MOVEMENT_TO_CUSTOMER,
@@ -38,11 +40,15 @@ class ManagmentSystem;
 class Courier {
 public:
     friend class CourierState;
+    friend class CourierInaccessible;
     friend class CourierWaiting;
     friend class CourierAccepting;
     friend class CourierMovement;
-    friend class CourierPayment;
+    friend class CourierDeliveryPayment;
     friend class CourierReturning;
+
+public:
+    using edge_const_iterator_t = std::vector<Graph::edge_descriptor>::const_iterator;
 
 public:
     Courier(ManagmentSystem& ms, WorkerID workerID);
@@ -59,28 +65,37 @@ public:
 
     WorkerID getID() const { return id_; }
 
-    ImVec2 getLocation() const { return curLocation_; }
+    ImVec2 getCurrentLocation() const { return curLocation_; }
 
-    std::chrono::nanoseconds getWaitingTime() const noexcept { return waitingTime_; }
+    void setRoute(std::unique_ptr<Route>& route) { route_ = std::move(route); }
 
-    void setRouteList(Order* order, std::vector<Graph::edge_descriptor> path);
-
-    const RouteList* getRouteList() const { return routeList_.get(); }
+    const Route* getRoute() const { return route_.get(); }
 
 private:
+    ImVec2 getLocation(size_t target) const;
+
+    ImVec2 calculateCurrentLocation();
+
     ImVec2 getOfficeLocation() const;
+
+    static ImVec2 getInaccessibleLocation();
+
+    long long int calculateFullDistance() const;
 
     void changeState(CourierState& state) { state_ = &state; }
 
 private:
     CourierState*                               state_;
     ManagmentSystem&                            ms_;
-    std::unique_ptr<RouteList>                  routeList_;
-    std::chrono::nanoseconds                    waitingTime_;
+    std::unique_ptr<Route>                      route_;
+    std::chrono::nanoseconds                    passedTime_;
+    std::chrono::nanoseconds                    makingTime_;
+    edge_const_iterator_t                       curEdge_;       // current traversable edge on the path
+    long long int                               passedDist_;    // passed distance for current edge, nanometers
+    long long int                               fullDist_;      // full distance of current edge, nanometers
     ImVec2                                      curLocation_;
     WorkerID                                    id_;
     CourierStatus                               prevStatus_;
-    bool                                        isDelivering_;
 };
 
 ///************************************************************************************************
@@ -96,6 +111,23 @@ public:
 
 protected:
     void changeState(Courier& courier, CourierState& state) { courier.changeState(state); }
+};
+
+
+class CourierInaccessible : public CourierState {
+protected:
+    CourierInaccessible() noexcept {}
+
+public:
+    static CourierInaccessible& instance() noexcept { return state_; }
+
+public:
+    virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
+
+    virtual CourierStatus getStatus() const { return CourierStatus::INACCESSIBLE; }
+
+private:
+    static CourierInaccessible state_;
 };
 
 
@@ -150,12 +182,12 @@ private:
 };
 
 
-class CourierPayment : public CourierState {
+class CourierDeliveryPayment : public CourierState {
 protected:
-    CourierPayment() noexcept {}
+    CourierDeliveryPayment() noexcept {}
 
 public:
-    static CourierPayment& instance() noexcept { return state_; }
+    static CourierDeliveryPayment& instance() noexcept { return state_; }
 
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
@@ -163,7 +195,7 @@ public:
     virtual CourierStatus getStatus() const { return CourierStatus::DELIVERY_AND_PAYMENT; }
 
 private:
-    static CourierPayment state_;
+    static CourierDeliveryPayment state_;
 };
 
 
@@ -189,6 +221,14 @@ inline void Courier::update(std::chrono::nanoseconds passedTime)
 {
     assert(state_);
     return state_->update(*this, passedTime);
+}
+
+inline ImVec2 Courier::getInaccessibleLocation()
+{
+    return ImVec2{
+        std::numeric_limits<float>::min() + 1.0e+10F,
+        std::numeric_limits<float>::min() + 1.0e+10F
+    };
 }
 
 inline CourierStatus Courier::getStatus() const

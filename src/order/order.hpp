@@ -29,10 +29,8 @@ enum class OrderStatus : char {
     COOKING_COMPLETED,
     WAITING_FOR_DELIVERY,
     DELIVERING,
+    PAYING,
     DELIVERING_COMPLETED,
-    WAITING_FOR_PAYMENT,
-    PAYMENT,
-    PAYMENT_COMPLETED,
     COMPLETED,
     // ^^^ STATUSES ^^^
     __NUMBER_OF,
@@ -78,6 +76,10 @@ public:
 
     void setStatus(OrderStatus status) noexcept { status_ = status; }
 
+    bool isPaid() const noexcept { return isPaid_; }
+
+    void isPaid(bool value) noexcept { isPaid_ = value; }
+
 private:
     const OrderID                               orderID_;
     const size_t                                target_;
@@ -85,40 +87,44 @@ private:
     time_point_t                                timeEnd_;
     std::vector<Food>                           food_;
     OrderStatus                                 status_;
+    bool                                        isPaid_;
 };
 
 ///************************************************************************************************
 
 class ManagmentSystem;
 
-class RouteList {
+class Route {
 public:
-    friend class CourierState;
-    friend class CourierWaiting;
-    friend class CourierAccepting;
-    friend class CourierMovement;
-    friend class CourierPayment;
-    friend class CourierReturning;
+    //friend class CourierState;
+    //friend class CourierWaiting;
+    //friend class CourierAccepting;
+    //friend class CourierMovement;
+    //friend class CourierDeliveryPayment;
+    //friend class CourierReturning;
 
 public:
-    RouteList(const ManagmentSystem& ms, Order* order,
+    Route(ManagmentSystem& ms, Order* order,
         std::vector<Graph::edge_descriptor> path);
 
-    RouteList(const RouteList&) = delete;
-    RouteList& operator=(const RouteList&) = delete;
-    RouteList(RouteList&&) = default;
-    RouteList& operator=(RouteList&&) = default;
+    Route(const Route&) = delete;
+    Route& operator=(const Route&) = delete;
+    Route(Route&&) = default;
+    Route& operator=(Route&&) = default;
 
-    virtual ~RouteList() noexcept {}
+    virtual ~Route() noexcept {}
+
+public:
+    const Order* getOrder() const noexcept { return order_; }
+
+    Order* getOrder() noexcept { return order_; }
+
+    const std::vector<Graph::edge_descriptor>& getPath() const { return path_; }
 
 private:
-    const ManagmentSystem&                      ms_;
+    ManagmentSystem&                            ms_;
     Order*                                      order_;
     std::vector<Graph::edge_descriptor>         path_;
-    std::chrono::nanoseconds                    requiredTime_;
-    long long int                               curEdge_;       // current traversable edge on the path
-    long long int                               passedDist_;    // passed distance for current edge, nanometers
-    long long int                               fullDist_;      // full distance of current edge, nanometers
 };
 
 } // namespace ds

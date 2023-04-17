@@ -42,6 +42,7 @@ Order* ManagmentSystem::createOrder()
     assert(order.get() != nullptr);
     nextOrderID_ = OrderID{ cmn::toUnderlying(nextOrderID_) + 1 };
     order->setStatus(OrderStatus::ACCEPTED);
+    order->isPaid(cmn::getRandomNumber(0, 1));
     order->setFood(createRandomFood());
     orders_.push_back(std::move(order));
     Order* o{ orders_.back().get() };

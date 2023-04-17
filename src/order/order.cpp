@@ -31,14 +31,10 @@ string toString(OrderStatus value)
         return u8"Waiting for delivery";
     case OrderStatus::DELIVERING:
         return u8"Delivering";
+    case OrderStatus::PAYING:
+        return u8"Paying";
     case OrderStatus::DELIVERING_COMPLETED:
         return u8"Delivering completed";
-    case OrderStatus::WAITING_FOR_PAYMENT:
-        return u8"Waiting for payment";
-    case OrderStatus::PAYMENT:
-        return u8"Payment";
-    case OrderStatus::PAYMENT_COMPLETED:
-        return u8"Payment completed";
     case OrderStatus::COMPLETED:
         return u8"Completed";
     default:
@@ -55,7 +51,8 @@ Order::Order(const OrderID orderID, const size_t target, const time_point_t time
     timeStart_      { timeStart },
     timeEnd_        { timeStart },
     food_           {},
-    status_         { OrderStatus::__INVALID }
+    status_         { OrderStatus::__INVALID },
+    isPaid_         { false }
 {}
 
 void Order::setFood(std::vector<Food> food)
@@ -66,16 +63,12 @@ void Order::setFood(std::vector<Food> food)
     }
 }
 
-RouteList::RouteList(const ManagmentSystem& ms, Order* order,
+Route::Route(ManagmentSystem& ms, Order* order,
     std::vector<Graph::edge_descriptor> path)
     :
     ms_             { ms },
     order_          { order },
-    path_           { std::move(path) },
-    requiredTime_   { 0 },
-    curEdge_        { 0 },
-    passedDist_     { 0 },
-    fullDist_       { 0 }
+    path_           { std::move(path) }
 {}
 
 } // namespace ds

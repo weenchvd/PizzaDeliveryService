@@ -41,9 +41,31 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                     Options::maxTimeSpeed_, "%d", ImGuiSliderFlags_AlwaysClamp);
 
                 ImGui::Separator();
-                ImGui::SliderInt("Delivery and payment time (sec)",
-                    &Options::instance().paymentTime_, Options::minPaymentTime_,
-                    Options::maxPaymentTime_, "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Courier pause time (sec)",
+                    &Options::instance().optCourier_.pauseTime_,
+                    OptionsCourier::minPauseTime_,
+                    OptionsCourier::maxPauseTime_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Courier pause chance (%)",
+                    &Options::instance().optCourier_.pauseChance_,
+                    OptionsCourier::minPauseChance_,
+                    OptionsCourier::maxPauseChance_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Order acceptance time (sec)",
+                    &Options::instance().optCourier_.acceptanceTime_,
+                    OptionsCourier::minAcceptanceTime_,
+                    OptionsCourier::maxAcceptanceTime_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Delivery time (sec)",
+                    &Options::instance().optCourier_.deliveryTime_,
+                    OptionsCourier::minDeliveryTime_,
+                    OptionsCourier::maxDeliveryTime_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Payment time (sec)",
+                    &Options::instance().optCourier_.paymentTime_,
+                    OptionsCourier::minPaymentTime_,
+                    OptionsCourier::maxPaymentTime_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
                 ImGui::SliderInt("Time to check free couriers (sec)",
                     &Options::instance().checkTimeFreeCour_, Options::minCheckTimeFreeCour_,
                     Options::maxCheckTimeFreeCour_, "%d", ImGuiSliderFlags_AlwaysClamp);
@@ -346,7 +368,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                 drawList->AddLine(srcPoint, tgtPoint, graphColor,
                     float(Options::instance().edgeWidth_));
                 // draw the direction of the edge as a point close to the target point
-                const float t{ 0.9f };
+                const float t{ 0.75f };
                 const ImVec2 directionPoint{
                     (1 - t) * srcPoint.x + t * tgtPoint.x,
                     (1 - t) * srcPoint.y + t * tgtPoint.y
@@ -365,7 +387,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
         // draw courier location
         auto couriers{ ms.getCouriers() };
         for (auto iter{ couriers.first }; iter != couriers.second; ++iter) {
-            ImVec2 courierLocation{ iter->get()->getLocation() };
+            ImVec2 courierLocation{ iter->get()->getCurrentLocation() };
             courierLocation.x += origin.x;
             courierLocation.y += origin.y;
             drawList->AddCircleFilled(courierLocation, 8, ImGui::GetColorU32(color::turquoise), 6);

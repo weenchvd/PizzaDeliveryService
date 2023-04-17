@@ -42,17 +42,16 @@ public:
     //auto getOrders() { return std::pair{ orders_.begin(), orders_.end() }; }
 
 private:
-    Courier* getFreeCourier() const;
+    //std::vector<Order*> getWaitingOrders() const;
 
-    std::vector<Order*> getWaitingOrders() const;
+    void distributeOrders();
 
-    void deleteCompletedOrders();
-
-    void deliverWaitingOrders();
+    void processOrders();
 
 private:
     ManagmentSystem*                            ms_;
     std::vector<Order*>                         orders_;        // current orders in delivery
+    std::vector<Order*>                         queue_;         // order queue for couriers
     std::vector<Courier*>                       couriers_;      // working couriers
 };
 

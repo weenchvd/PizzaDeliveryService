@@ -34,7 +34,7 @@ void Scheduler::processOrder(Order* order)
     case OrderStatus::COOKING_COMPLETED:
         ms_->delivery().deliveryOrder(order);
         break;
-    case OrderStatus::PAYMENT_COMPLETED:
+    case OrderStatus::DELIVERING_COMPLETED:
         order->setStatus(OrderStatus::COMPLETED);
         order->setTimeEnd(ms_->getCurrentTime());
         orders_.push_back(order);
