@@ -90,6 +90,7 @@ private:
     std::unique_ptr<Route>                      route_;
     std::chrono::nanoseconds                    passedTime_;
     std::chrono::nanoseconds                    makingTime_;
+    std::vector<Order*>::iterator               curOrder_;      // current order being delivered
     edge_const_iterator_t                       curEdge_;       // current traversable edge on the path
     long long int                               passedDist_;    // passed distance for current edge, nanometers
     long long int                               fullDist_;      // full distance of current edge, nanometers

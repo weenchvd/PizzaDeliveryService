@@ -96,15 +96,7 @@ class ManagmentSystem;
 
 class Route {
 public:
-    //friend class CourierState;
-    //friend class CourierWaiting;
-    //friend class CourierAccepting;
-    //friend class CourierMovement;
-    //friend class CourierDeliveryPayment;
-    //friend class CourierReturning;
-
-public:
-    Route(ManagmentSystem& ms, Order* order,
+    Route(ManagmentSystem& ms, std::vector<Order*> orders,
         std::vector<Graph::edge_descriptor> path);
 
     Route(const Route&) = delete;
@@ -115,15 +107,15 @@ public:
     virtual ~Route() noexcept {}
 
 public:
-    const Order* getOrder() const noexcept { return order_; }
+    const std::vector<Order*>& getOrders() const noexcept { return orders_; }
 
-    Order* getOrder() noexcept { return order_; }
+    std::vector<Order*>& getOrders() noexcept { return orders_; }
 
     const std::vector<Graph::edge_descriptor>& getPath() const { return path_; }
 
 private:
     ManagmentSystem&                            ms_;
-    Order*                                      order_;
+    std::vector<Order*>                         orders_;
     std::vector<Graph::edge_descriptor>         path_;
 };
 

@@ -8,6 +8,7 @@
 #include"delivery.hpp"
 #include"msystem.hpp"
 #include"options.hpp"
+#include<algorithm>
 #include<assert.h>
 
 namespace ds {
@@ -24,7 +25,7 @@ Delivery::Delivery()
 
 void Delivery::update(chrono::nanoseconds passedTime)
 {
-    const chrono::seconds checkTime{ Options::instance().checkTimeFreeCour_ };
+    const chrono::seconds checkTime{ Options::instance().optDelivery_.checkTimeFreeCour_ };
     static chrono::nanoseconds time{ 0 };
     time += passedTime;
     if (time >= checkTime) {
@@ -41,23 +42,50 @@ void Delivery::distributeOrders()
 {
     vector<Courier*> delivering;
     for (auto iterCourier{ couriers_.begin() }; iterCourier != couriers_.end();) {
+        if (queue_.empty() == true) {
+            break;
+        }
         bool advance{ true };
         Courier* courier{ *iterCourier };
         if (courier->getStatus() == CourierStatus::WAITING_FOR_NEXT) {
-            for (auto iterOrder{ queue_.begin() }; iterOrder != queue_.end(); ++iterOrder) {
-                assert(*iterOrder != nullptr);
-                if ((*iterOrder)->getStatus() == OrderStatus::WAITING_FOR_DELIVERY) {
-                    Order* order{ *iterOrder };
-                    auto path{ ms_->map().getPath(0, order->getTarget()) };
-                    unique_ptr<Route> route{ new Route{ *ms_, order, std::move(path) } };
-                    courier->setRoute(route);
-                    iterOrder = queue_.erase(iterOrder);
-                    iterCourier = couriers_.erase(iterCourier);
-                    delivering.push_back(courier);
-                    advance = false;
-                    break;
-                }
+            vector<Graph::vertex_descriptor> tgtVertices{
+                vector<Graph::vertex_descriptor>(queue_.size(), Graph::vertex_descriptor{ 0 })
+            };
+            vector<chrono::seconds> remainingTime{
+                vector<chrono::seconds>(queue_.size(), chrono::seconds{ 0 })
+            };
+            const auto currentTime{ ms_->getCurrentTime() };
+            assert(queue_.size() == tgtVertices.size());
+            assert(queue_.size() == remainingTime.size());
+            for (int i = 0; i < queue_.size(); ++i) {
+                Order* order{ queue_[i] };
+                assert(order->getStatus() == OrderStatus::WAITING_FOR_DELIVERY);
+                tgtVertices[i] = order->getTarget();
+                remainingTime[i] = chrono::seconds{
+                    Options::instance().optDelivery_.deliveryTime_ -
+                    chrono::duration_cast<chrono::seconds>(
+                        currentTime - order->getTimeStart()).count()
+                };
             }
+            MapPath mp{
+                ms_->map().getPath(ms_->scheduler().getOffice(), tgtVertices, remainingTime)
+            };
+            vector<Order*> orders;
+            for (auto i : mp.visited_) {
+                orders.push_back(queue_[i]);
+            }
+            unique_ptr<Route> route{ new Route{ *ms_, std::move(orders), std::move(mp.path_) } };
+            courier->setRoute(route);
+            iterCourier = couriers_.erase(iterCourier);
+            delivering.push_back(courier);
+            auto newEnd{ queue_.end() };
+            for (auto iterOrder{ courier->getRoute()->getOrders().cbegin() };
+                iterOrder != courier->getRoute()->getOrders().cend(); ++iterOrder)
+            {
+                newEnd = remove(queue_.begin(), newEnd, *iterOrder);
+            }
+            queue_.erase(newEnd, queue_.end());
+            advance = false;
         }
         if (advance) {
             ++iterCourier;
@@ -106,17 +134,5 @@ void Delivery::deleteCourier(Courier* courier)
         }
     }
 }
-
-//vector<Order*> Delivery::getWaitingOrders() const
-//{
-//    vector<Order*> wo{};
-//    for (Order* o : orders_) {
-//        assert(o != nullptr);
-//        if (o->getStatus() == OrderStatus::WAITING_FOR_DELIVERY) {
-//            wo.push_back(o);
-//        }
-//    }
-//    return wo;
-//}
 
 } // namespace ds

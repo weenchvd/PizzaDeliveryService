@@ -63,11 +63,11 @@ void Order::setFood(std::vector<Food> food)
     }
 }
 
-Route::Route(ManagmentSystem& ms, Order* order,
-    std::vector<Graph::edge_descriptor> path)
+Route::Route(ManagmentSystem& ms, vector<Order*> orders,
+    vector<Graph::edge_descriptor> path)
     :
     ms_             { ms },
-    order_          { order },
+    orders_         { std::move(orders) },
     path_           { std::move(path) }
 {}
 

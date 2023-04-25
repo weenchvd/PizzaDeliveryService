@@ -54,6 +54,7 @@ Courier::Courier(ManagmentSystem& ms, WorkerID workerID)
     route_          { nullptr },
     passedTime_     { 0 },
     makingTime_     { 0 },
+    curOrder_       {},
     curEdge_        {},
     passedDist_     { 0 },
     fullDist_       { 0 },
@@ -103,6 +104,7 @@ void CourierInaccessible::update(Courier& courier, std::chrono::nanoseconds pass
         courier.prevStatus_ = CourierStatus::INACCESSIBLE;
         courier.curLocation_ = courier.getInaccessibleLocation();
         courier.route_.reset();
+        courier.curOrder_ = vector<Order*>::iterator{};
         courier.curEdge_ = Courier::edge_const_iterator_t{};
         int random{ cmn::getRandomNumber(1, 100) };
         courier.makingTime_ =
@@ -139,12 +141,16 @@ void CourierAccepting::update(Courier& courier, std::chrono::nanoseconds passedT
 {
     if (courier.prevStatus_ != CourierStatus::ACCEPTING_ORDER) {
         courier.prevStatus_ = CourierStatus::ACCEPTING_ORDER;
+        courier.curOrder_ = courier.route_->getOrders().begin();
+        courier.curEdge_ = courier.route_->getPath().cbegin();
         courier.curLocation_ = courier.getOfficeLocation();
         courier.makingTime_ = chrono::seconds{ cmn::getRandomNumber(
             OptionsCourier::minAcceptanceTime_,
             Options::instance().optCourier_.acceptanceTime_
         )};
-        courier.route_->getOrder()->setStatus(OrderStatus::DELIVERING);
+        for (Order* order : courier.route_->getOrders()) {
+            order->setStatus(OrderStatus::DELIVERING);
+        }
     }
     courier.passedTime_ += passedTime;
     if (courier.passedTime_ >= courier.makingTime_) {
@@ -157,17 +163,16 @@ void CourierMovement::update(Courier& courier, std::chrono::nanoseconds passedTi
 {
     if (courier.prevStatus_ != CourierStatus::MOVEMENT_TO_CUSTOMER) {
         courier.prevStatus_ = CourierStatus::MOVEMENT_TO_CUSTOMER;
-        courier.curEdge_ = courier.route_->getPath().cbegin();
         courier.passedDist_ = 0;
         courier.fullDist_ = courier.calculateFullDistance();
         courier.makingTime_ = chrono::nanoseconds{ 0 };
     }
     courier.passedTime_ += passedTime;
     courier.makingTime_ += passedTime;
-    courier.passedDist_ += passedTime.count() * Map::avgSpeed_;
+    courier.passedDist_ += passedTime.count() * Options::instance().optCourier_.averageSpeed_;
     if (courier.passedDist_ >= courier.fullDist_) {
         courier.passedDist_ -= courier.fullDist_;
-        if (courier.curEdge_ == --courier.route_->getPath().end()) {
+        if (courier.curEdge_->m_target == (*courier.curOrder_)->getTarget()) {
             courier.curLocation_ = courier.getLocation(courier.curEdge_->m_target);
             courier.passedTime_ -= courier.makingTime_;
             this->changeState(courier, CourierDeliveryPayment::instance());
@@ -194,17 +199,29 @@ void CourierDeliveryPayment::update(Courier& courier, std::chrono::nanoseconds p
     courier.passedTime_ += passedTime;
     if (courier.passedTime_ >= courier.makingTime_) {
         courier.passedTime_ -= courier.makingTime_;
-        if (courier.route_->getOrder()->isPaid() == true) {
-            courier.route_->getOrder()->setStatus(OrderStatus::DELIVERING_COMPLETED);
-            this->changeState(courier, CourierReturning::instance());
+        if ((*courier.curOrder_)->isPaid() == true) {
+            (*courier.curOrder_)->setStatus(OrderStatus::DELIVERING_COMPLETED);
+            if (courier.curOrder_ == --courier.route_->getOrders().end()) {
+                assert(courier.curEdge_ == --courier.route_->getPath().cend());
+                this->changeState(courier, CourierReturning::instance());
+                return;
+            }
+            ++courier.curOrder_;
+            if (courier.curEdge_->m_target == (*courier.curOrder_)->getTarget()) {
+                courier.prevStatus_ = CourierStatus::MOVEMENT_TO_CUSTOMER;
+                return;
+            }
+            ++courier.curEdge_;
+            assert(courier.curEdge_ != courier.route_->getPath().cend());
+            this->changeState(courier, CourierMovement::instance());
             return;
         }
         courier.makingTime_ = chrono::seconds{ cmn::getRandomNumber(
             Options::instance().optCourier_.minPaymentTime_,
             Options::instance().optCourier_.paymentTime_
         ) };
-        courier.route_->getOrder()->setStatus(OrderStatus::PAYING);
-        courier.route_->getOrder()->isPaid(true);
+        (*courier.curOrder_)->setStatus(OrderStatus::PAYING);
+        (*courier.curOrder_)->isPaid(true);
     }
 }
 
@@ -214,8 +231,9 @@ void CourierReturning::update(Courier& courier, std::chrono::nanoseconds passedT
         courier.prevStatus_ = CourierStatus::RETURNING_TO_OFFICE;
         const auto source{ courier.curEdge_->m_target };
         auto path{ courier.ms_.map().getPath(source, courier.ms_.scheduler().getOffice()) };
-        unique_ptr<Route> route{ new Route{ courier.ms_, nullptr, std::move(path) } };
+        unique_ptr<Route> route{ new Route{ courier.ms_, vector<Order*>{}, std::move(path)}};
         courier.route_ = std::move(route);
+        courier.curOrder_ = vector<Order*>::iterator{};
         courier.curEdge_ = courier.route_->getPath().cbegin();
         courier.passedDist_ = 0;
         courier.fullDist_ = courier.calculateFullDistance();
@@ -223,10 +241,10 @@ void CourierReturning::update(Courier& courier, std::chrono::nanoseconds passedT
     }
     courier.passedTime_ += passedTime;
     courier.makingTime_ += passedTime;
-    courier.passedDist_ += passedTime.count() * Map::avgSpeed_;
+    courier.passedDist_ += passedTime.count() * Options::instance().optCourier_.averageSpeed_;
     if (courier.passedDist_ >= courier.fullDist_) {
         courier.passedDist_ -= courier.fullDist_;
-        if (courier.curEdge_ == --courier.route_->getPath().end()) {
+        if (courier.curEdge_ == --courier.route_->getPath().cend()) {
             courier.curLocation_ = courier.getLocation(courier.curEdge_->m_target);
             courier.passedTime_ -= courier.makingTime_;
             this->changeState(courier, CourierInaccessible::instance());

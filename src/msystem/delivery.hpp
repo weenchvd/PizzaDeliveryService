@@ -42,8 +42,6 @@ public:
     //auto getOrders() { return std::pair{ orders_.begin(), orders_.end() }; }
 
 private:
-    //std::vector<Order*> getWaitingOrders() const;
-
     void distributeOrders();
 
     void processOrders();

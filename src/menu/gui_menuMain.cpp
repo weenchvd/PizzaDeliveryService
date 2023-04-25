@@ -41,43 +41,69 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                     Options::maxTimeSpeed_, "%d", ImGuiSliderFlags_AlwaysClamp);
 
                 ImGui::Separator();
-                ImGui::SliderInt("Courier pause time (sec)",
+                ImGui::TextUnformatted("Map");
+                ImGui::Checkbox("Enable grid", &optEnableGrid);
+                ImGui::SliderInt("Scale##Map",
+                    &Options::instance().optMap_.scale_,
+                    OptionsMap::minScale_,
+                    OptionsMap::maxScale_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Vertex radius (pixels)##Map",
+                    &Options::instance().optMap_.vertexRadius_,
+                    OptionsMap::minVertexRadius_,
+                    OptionsMap::maxVertexRadius_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Edge width (pixels)##Map",
+                    &Options::instance().optMap_.edgeWidth_,
+                    OptionsMap::minEdgeWidth_,
+                    OptionsMap::maxEdgeWidth_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+
+                ImGui::Separator();
+                ImGui::TextUnformatted("Delivery");
+                ImGui::SliderInt("Delivery time (sec)##Delivery",
+                    &Options::instance().optDelivery_.deliveryTime_,
+                    OptionsDelivery::minDeliveryTime_,
+                    OptionsDelivery::maxDeliveryTime_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Time to check free couriers (sec)##Delivery",
+                    &Options::instance().optDelivery_.checkTimeFreeCour_,
+                    OptionsDelivery::minCheckTimeFreeCour_,
+                    OptionsDelivery::maxCheckTimeFreeCour_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
+
+                ImGui::Separator();
+                ImGui::TextUnformatted("Courier");
+                ImGui::SliderInt("Courier pause time (sec)##Courier",
                     &Options::instance().optCourier_.pauseTime_,
                     OptionsCourier::minPauseTime_,
                     OptionsCourier::maxPauseTime_,
                     "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Courier pause chance (%)",
+                ImGui::SliderInt("Courier pause chance (%)##Courier",
                     &Options::instance().optCourier_.pauseChance_,
                     OptionsCourier::minPauseChance_,
                     OptionsCourier::maxPauseChance_,
                     "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Order acceptance time (sec)",
+                ImGui::SliderInt("Order acceptance time (sec)##Courier",
                     &Options::instance().optCourier_.acceptanceTime_,
                     OptionsCourier::minAcceptanceTime_,
                     OptionsCourier::maxAcceptanceTime_,
                     "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Delivery time (sec)",
+                ImGui::SliderInt("Delivery time (sec)##Courier",
                     &Options::instance().optCourier_.deliveryTime_,
                     OptionsCourier::minDeliveryTime_,
                     OptionsCourier::maxDeliveryTime_,
                     "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Payment time (sec)",
+                ImGui::SliderInt("Payment time (sec)##Courier",
                     &Options::instance().optCourier_.paymentTime_,
                     OptionsCourier::minPaymentTime_,
                     OptionsCourier::maxPaymentTime_,
                     "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Time to check free couriers (sec)",
-                    &Options::instance().checkTimeFreeCour_, Options::minCheckTimeFreeCour_,
-                    Options::maxCheckTimeFreeCour_, "%d", ImGuiSliderFlags_AlwaysClamp);
-
-                ImGui::Separator();
-                ImGui::Checkbox("Enable grid", &optEnableGrid);
-                ImGui::SliderInt("Vertex radius (pixels)",
-                    &Options::instance().vertexRadius_, Options::minVertexRadius_,
-                    Options::maxVertexRadius_, "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Edge width (pixels)",
-                    &Options::instance().edgeWidth_, Options::minEdgeWidth_,
-                    Options::maxEdgeWidth_, "%d", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SliderInt("Average courier speed (meters per second)##Courier",
+                    &Options::instance().optCourier_.averageSpeed_,
+                    OptionsCourier::minAverageSpeed_,
+                    OptionsCourier::maxAverageSpeed_,
+                    "%d", ImGuiSliderFlags_AlwaysClamp);
 
                 ImGui::EndMenu();
             }
@@ -200,12 +226,12 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                 ImGui::PushID(i);
                 // vertex == invisible button in same place
                 const ImVec2 invButtonSize{
-                    float(Options::instance().vertexRadius_ * 2),
-                    float(Options::instance().vertexRadius_ * 2)
+                    float(Options::instance().optMap_.vertexRadius_ * 2),
+                    float(Options::instance().optMap_.vertexRadius_ * 2)
                 };
                 const ImVec2 screenPos{
-                    origin.x + vertices[i].m_property.x_ - Options::instance().vertexRadius_,
-                    origin.y + vertices[i].m_property.y_ - Options::instance().vertexRadius_
+                    origin.x + vertices[i].m_property.x_ - Options::instance().optMap_.vertexRadius_,
+                    origin.y + vertices[i].m_property.y_ - Options::instance().optMap_.vertexRadius_
                 };
                 ImGui::SetCursorScreenPos(screenPos);
                 ImGui::InvisibleButton(u8"v", invButtonSize,
@@ -267,7 +293,8 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                                              vertices[edgeTgtVertex].m_property.x_ };
                             const int yDiff{ vertices[edgeSrcVertex].m_property.y_ -
                                              vertices[edgeTgtVertex].m_property.y_ };
-                            const int distance = std::sqrt(xDiff * xDiff + yDiff * yDiff) * Map::scale_;
+                            const int distance = std::sqrt(xDiff * xDiff + yDiff * yDiff)
+                                * Options::instance().optMap_.scale_;
                             ms.map().addEdge(edgeSrcVertex, edgeTgtVertex, distance);
                         }
                     }
@@ -352,7 +379,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
             drawList->AddCircleFilled(
                 ImVec2{ origin.x + vertices[i].m_property.x_,
                         origin.y + vertices[i].m_property.y_ },
-                Options::instance().vertexRadius_, graphColor, 4);
+                Options::instance().optMap_.vertexRadius_, graphColor, 4);
         }
         // draw edges
         for (int i = 0; i < vertices.size(); ++i) {
@@ -366,7 +393,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                     origin.y + vertices[vertices[i].m_out_edges[j].m_target].m_property.y_
                 };
                 drawList->AddLine(srcPoint, tgtPoint, graphColor,
-                    float(Options::instance().edgeWidth_));
+                    float(Options::instance().optMap_.edgeWidth_));
                 // draw the direction of the edge as a point close to the target point
                 const float t{ 0.75f };
                 const ImVec2 directionPoint{
@@ -374,7 +401,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
                     (1 - t) * srcPoint.y + t * tgtPoint.y
                 };
                 drawList->AddCircleFilled(directionPoint,
-                    int(Options::instance().vertexRadius_ * 0.6f), graphColor);
+                    int(Options::instance().optMap_.vertexRadius_ * 0.6f), graphColor);
             }
         }
         // draw the edge being drawn at the moment
@@ -382,7 +409,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
             drawList->AddLine(
                 ImVec2{ origin.x + edgeP1.x, origin.y + edgeP1.y },
                 ImVec2{ origin.x + edgeP2.x, origin.y + edgeP2.y },
-                graphColor, float(Options::instance().edgeWidth_));
+                graphColor, float(Options::instance().optMap_.edgeWidth_));
         }
         // draw courier location
         auto couriers{ ms.getCouriers() };

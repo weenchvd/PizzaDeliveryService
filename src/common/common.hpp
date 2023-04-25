@@ -88,6 +88,18 @@ T extractWithShift(std::vector<T>& v, size_t index)
     return std::move(ret);
 }
 
+template <class T>
+size_t getQtyOfValues(const std::vector<T>& container, const T& value)
+{
+    size_t qty{ 0 };
+    for (const T& v : container) {
+        if (v == value) {
+            ++qty;
+        }
+    }
+    return qty;
+}
+
 } // namespace cmn
 
 #endif // !COMMON_HPP

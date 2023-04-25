@@ -23,4 +23,6 @@ target_include_directories(${LIBRARY_NAME}
 
 target_link_libraries(${LIBRARY_NAME}
                       PUBLIC "${BOOST_LIB_LIST}"
+                      PUBLIC common
+                      PUBLIC options
 )

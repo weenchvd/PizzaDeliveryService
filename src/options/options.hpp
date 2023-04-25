@@ -18,6 +18,49 @@ public:
 };
 
 
+class OptionsMap : OptionsBase {
+public:
+    static constexpr unsigned int defScale_{ 10 };
+    static constexpr unsigned int minScale_{ 10 };
+    static constexpr unsigned int maxScale_{ 10 };
+
+    static constexpr unsigned int defVertexRadius_{ 6 };        // pixels
+    static constexpr unsigned int minVertexRadius_{ 2 };        // pixels
+    static constexpr unsigned int maxVertexRadius_{ 10 };       // pixels
+
+    static constexpr unsigned int defEdgeWidth_{ 1 };           // pixels
+    static constexpr unsigned int minEdgeWidth_{ 1 };           // pixels
+    static constexpr unsigned int maxEdgeWidth_{ 5 };           // pixels
+
+public:
+    OptionsMap();
+
+public:
+    int                             scale_;
+    int                             vertexRadius_;              // pixels
+    int                             edgeWidth_;                 // pixels
+};
+
+
+class OptionsDelivery : OptionsBase {
+public:
+    static constexpr unsigned int defDeliveryTime_{ 60 * 55 };  // seconds
+    static constexpr unsigned int minDeliveryTime_{ 60 * 30 };  // seconds
+    static constexpr unsigned int maxDeliveryTime_{ 60 * 80 };  // seconds
+
+    static constexpr unsigned int defCheckTimeFreeCour_{ 1 };   // seconds
+    static constexpr unsigned int minCheckTimeFreeCour_{ 1 };   // seconds
+    static constexpr unsigned int maxCheckTimeFreeCour_{ 10 };  // seconds
+
+public:
+    OptionsDelivery();
+
+public:
+    int                             deliveryTime_;              // seconds
+    int                             checkTimeFreeCour_;         // time to check free couriers
+};
+
+
 class OptionsCourier : OptionsBase {
 public:
     static constexpr unsigned int defInaccessibleTime_{ 5 };    // seconds
@@ -42,6 +85,10 @@ public:
     static constexpr unsigned int minPaymentTime_{ 60 };        // seconds
     static constexpr unsigned int maxPaymentTime_{ 60 * 2 };    // seconds
 
+    static constexpr unsigned int defAverageSpeed_{ 10 };       // meters per second
+    static constexpr unsigned int minAverageSpeed_{ 1 };        // meters per second
+    static constexpr unsigned int maxAverageSpeed_{ 20 };       // meters per second
+
 public:
     OptionsCourier();
 
@@ -51,6 +98,7 @@ public:
     int                             acceptanceTime_;            // seconds
     int                             deliveryTime_;              // seconds
     int                             paymentTime_;               // seconds
+    int                             averageSpeed_;              // meters per second
 };
 
 
@@ -71,18 +119,6 @@ public:
     static constexpr unsigned int minTimeSpeed_{ 1 };
     static constexpr unsigned int maxTimeSpeed_{ 120 };
 
-    static constexpr unsigned int defCheckTimeFreeCour_{ 1 };   // seconds
-    static constexpr unsigned int minCheckTimeFreeCour_{ 1 };   // seconds
-    static constexpr unsigned int maxCheckTimeFreeCour_{ 10 };  // seconds
-
-    static constexpr unsigned int defVertexRadius_{ 6 };
-    static constexpr unsigned int minVertexRadius_{ 2 };
-    static constexpr unsigned int maxVertexRadius_{ 10 };
-
-    static constexpr unsigned int defEdgeWidth_{ 1 };
-    static constexpr unsigned int minEdgeWidth_{ 1 };
-    static constexpr unsigned int maxEdgeWidth_{ 5 };
-
 private:
     Options();
 
@@ -90,16 +126,12 @@ public:
     static Options& instance() { return uniqueInstance_; }
 
 public:
+    OptionsMap                      optMap_;
+    OptionsDelivery                 optDelivery_;
     OptionsCourier                  optCourier_;
 
     int                             fps_;                       // frames per second
     int                             timeSpeed_;
-
-    int                             checkTimeFreeCour_;         // time to check free couriers
-
-    int                             vertexRadius_;              // in pixels
-    int                             edgeWidth_;                 // in pixels
-
 private:
     static Options                  uniqueInstance_;
 };
