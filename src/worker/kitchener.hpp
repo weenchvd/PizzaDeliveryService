@@ -11,6 +11,7 @@
 #include"worker.hpp"
 #include<assert.h>
 #include<chrono>
+#include<string>
 
 namespace ds {
 
@@ -35,6 +36,10 @@ enum class KitchenerStatus : char {
     __NUMBER_OF,
     __END                           /// must be the last
 };
+
+std::string toString(KitchenerType value);
+
+std::string toString(KitchenerStatus value);
 
 ///************************************************************************************************
 

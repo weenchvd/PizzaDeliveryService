@@ -146,7 +146,7 @@ void Kitchen::deleteKitchener(Kitchener* kitchener)
     }
 }
 
-Order& Kitchen::getOrder(Food* food)
+const Order& Kitchen::getOrder(Food* food) const
 {
     assert(food != nullptr);
     for (Order* order : orders_) {

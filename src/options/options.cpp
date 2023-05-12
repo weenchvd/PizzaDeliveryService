@@ -18,7 +18,8 @@ OptionsMap::OptionsMap()
     :
     scale_              { defScale_},
     vertexRadius_       { defVertexRadius_},
-    edgeWidth_          { defEdgeWidth_ }
+    edgeWidth_          { defEdgeWidth_ },
+    showGrid_           { true }
 {
     static_assert(minScale_ > 0);
     static_assert(defScale_ >= minScale_ && defScale_ <= maxScale_);

@@ -33,6 +33,8 @@ enum class CourierStatus : char {
     __END                           /// must be the last
 };
 
+std::string toString(CourierStatus value);
+
 ///************************************************************************************************
 
 class ManagmentSystem;
@@ -61,11 +63,13 @@ public:
 public:
     virtual void update(std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const;
+    virtual CourierStatus getStatus() const noexcept;
 
-    WorkerID getID() const { return id_; }
+    WorkerID getID() const noexcept { return id_; }
 
-    ImVec2 getCurrentLocation() const { return curLocation_; }
+    auto getCurrentOrder() const noexcept { return curOrder_; }
+
+    ImVec2 getCurrentLocation() const noexcept { return curLocation_; }
 
     void setRoute(std::unique_ptr<Route>& route) { route_ = std::move(route); }
 
@@ -108,7 +112,7 @@ protected:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::__INVALID; }
+    virtual CourierStatus getStatus() const noexcept { return CourierStatus::__INVALID; }
 
 protected:
     void changeState(Courier& courier, CourierState& state) { courier.changeState(state); }
@@ -125,7 +129,7 @@ public:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::INACCESSIBLE; }
+    virtual CourierStatus getStatus() const noexcept { return CourierStatus::INACCESSIBLE; }
 
 private:
     static CourierInaccessible state_;
@@ -142,7 +146,7 @@ public:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::WAITING_FOR_NEXT; }
+    virtual CourierStatus getStatus() const noexcept { return CourierStatus::WAITING_FOR_NEXT; }
 
 private:
     static CourierWaiting state_;
@@ -159,7 +163,7 @@ public:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::ACCEPTING_ORDER; }
+    virtual CourierStatus getStatus() const noexcept { return CourierStatus::ACCEPTING_ORDER; }
 
 private:
     static CourierAccepting state_;
@@ -176,7 +180,7 @@ public:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::MOVEMENT_TO_CUSTOMER; }
+    virtual CourierStatus getStatus() const noexcept { return CourierStatus::MOVEMENT_TO_CUSTOMER; }
 
 private:
     static CourierMovement state_;
@@ -193,7 +197,7 @@ public:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::DELIVERY_AND_PAYMENT; }
+    virtual CourierStatus getStatus() const noexcept { return CourierStatus::DELIVERY_AND_PAYMENT; }
 
 private:
     static CourierDeliveryPayment state_;
@@ -210,7 +214,7 @@ public:
 public:
     virtual void update(Courier& courier, std::chrono::nanoseconds passedTime);
 
-    virtual CourierStatus getStatus() const { return CourierStatus::RETURNING_TO_OFFICE; }
+    virtual CourierStatus getStatus() const noexcept { return CourierStatus::RETURNING_TO_OFFICE; }
 
 private:
     static CourierReturning state_;
@@ -232,7 +236,7 @@ inline ImVec2 Courier::getInaccessibleLocation()
     };
 }
 
-inline CourierStatus Courier::getStatus() const
+inline CourierStatus Courier::getStatus() const noexcept
 {
     assert(state_);
     return state_->getStatus();

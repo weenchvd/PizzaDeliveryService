@@ -4,6 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE or copy at https://www.boost.org/LICENSE_1_0.txt)
 
+#include"common.hpp"
 #include"food.hpp"
 
 namespace ds {
@@ -46,6 +47,22 @@ string toString(FoodName value)
     default:
         return u8"UNKNOWN";
     }
+    static_assert(cmn::numberOf<FoodName>() == 15);
+}
+
+string toString(FoodStatus value)
+{
+    switch (value) {
+    case FoodStatus::WAITING_FOR_MAKING:
+        return u8"Waiting for making";
+    case FoodStatus::MAKING:
+        return u8"Making";
+    case FoodStatus::DONE:
+        return u8"Done";
+    default:
+        return u8"UNKNOWN";
+    }
+    static_assert(cmn::numberOf<FoodStatus>() == 3);
 }
 
 ///************************************************************************************************

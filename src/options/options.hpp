@@ -39,6 +39,7 @@ public:
     int                             scale_;
     int                             vertexRadius_;              // pixels
     int                             edgeWidth_;                 // pixels
+    bool                            showGrid_;
 };
 
 
@@ -104,7 +105,7 @@ public:
 
 class Options : OptionsBase {
 public:
-    static constexpr unsigned int numComplOrders_{ 10 };        // number of completed orders
+    static constexpr unsigned int numComplOrders_{ 20 };        // number of completed orders
 
     static constexpr unsigned int minPauseTime_{ 60 };          // seconds
     static constexpr unsigned int maxPauseTime_{ 60 * 15 };     // seconds

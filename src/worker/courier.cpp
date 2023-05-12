@@ -34,6 +34,7 @@ string toString(CourierStatus value)
     default:
         return u8"UNKNOWN";
     }
+    static_assert(cmn::numberOf<CourierStatus>() == 6);
 }
 
 ///************************************************************************************************

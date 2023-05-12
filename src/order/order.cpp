@@ -40,6 +40,7 @@ string toString(OrderStatus value)
     default:
         return u8"UNKNOWN";
     }
+    static_assert(cmn::numberOf<OrderStatus>() == 10);
 }
 
 ///************************************************************************************************

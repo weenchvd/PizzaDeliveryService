@@ -40,16 +40,20 @@ public:
 
     void setManagmentSystem(ManagmentSystem* ms) { ms_ = ms; }
 
+    const Order& getOrder(Food* food) const;
+
     auto getOrders() const { return std::pair{ orders_.cbegin(), orders_.cend() }; }
 
-    //auto getOrders() { return std::pair{ orders_.begin(), orders_.end() }; }
+    auto getQueueDough() { return std::pair{ queueDough_.cbegin(), queueDough_.cend() }; }
+
+    auto getQueueFilling() { return std::pair{ queueFilling_.cbegin(), queueFilling_.cend() }; }
+
+    auto getQueuePicker() { return std::pair{ queuePicker_.cbegin(), queuePicker_.cend() }; }
 
 private:
     void distributeOrders();
 
     void processOrders();
-
-    Order& getOrder(Food* food);
 
     void pushFrontQueueDough(Food* food) { pushFrontQueue(queueDough_, food); }
 

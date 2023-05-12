@@ -12,7 +12,28 @@
 
 namespace ds {
 
+enum class SubmenuType : char {
+    __INVALID = -1,                 /// invalid, must be the first
+    // vvv TYPES vvv
+    COMMON,
+    KITCHEN,
+    DELIVERY,
+    // ^^^ TYPES ^^^
+    __NUMBER_OF,
+    __END                           /// must be the last
+};
+
+///************************************************************************************************
+
+void guiMenuMain_Submenu(SubmenuType& submenu);
+
 void guiMenuMain(bool* open, ManagmentSystem& ms);
+
+void guiMenuCommon(bool* open, ManagmentSystem& ms, SubmenuType& submenu);
+
+void guiMenuKitchen(bool* open, ManagmentSystem& ms, SubmenuType& submenu);
+
+void guiMenuDelivery(bool* open, ManagmentSystem& ms, SubmenuType& submenu);
 
 } // namespace ds
 

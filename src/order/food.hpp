@@ -63,6 +63,8 @@ enum class FoodStatus : char {
 
 std::string toString(FoodName value);
 
+std::string toString(FoodStatus value);
+
 ///************************************************************************************************
 
 class Food {

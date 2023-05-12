@@ -68,6 +68,10 @@ public:
 
     //auto getCouriers() { return std::pair{ couriers_.begin(), couriers_.end() }; }
 
+    auto getKitcheners() const { return std::pair{ kitcheners_.cbegin(), kitcheners_.cend() }; }
+
+    //auto getKitcheners() { return std::pair{ kitcheners_.begin(), kitcheners_.end() }; }
+
     Courier* activateCourier(WorkerID workerID);
 
     bool deactivateCourier(WorkerID workerID);

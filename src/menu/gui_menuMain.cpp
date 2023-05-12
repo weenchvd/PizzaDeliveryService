@@ -11,6 +11,7 @@
 #include"options.hpp"
 #include<cstdlib>
 #include<filesystem>
+#include<iterator>
 #include<limits>
 #include<regex>
 #include<sstream>
@@ -19,125 +20,134 @@ namespace ds {
 
 using namespace std;
 
+void guiMenuMain_Submenu(SubmenuType& submenu)
+{
+    const auto& style{ ImGui::GetStyle() };
+    ImGuiTableFlags_ tableFlags{ static_cast<ImGuiTableFlags_>(
+        ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame
+    ) };
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 0.0f, 0.0f });
+    if (ImGui::BeginTable(u8"Submenus", cmn::numberOf<SubmenuType>(), tableFlags)) {
+        const ImVec2 buttonSize{
+            ImGui::GetWindowContentRegionMax().x / cmn::numberOf<SubmenuType>(),
+            ImGui::GetFrameHeight()
+        };
+
+        bool isActiveSubmenu{ false };
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        isActiveSubmenu = (submenu == SubmenuType::COMMON) ? true : false;
+        if (isActiveSubmenu) {
+            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonActive]);
+        }
+        if (ImGui::Button(u8"Common", buttonSize)) {
+            submenu = SubmenuType::COMMON;
+        }
+        if (isActiveSubmenu) {
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::TableNextColumn();
+        isActiveSubmenu = (submenu == SubmenuType::KITCHEN) ? true : false;
+        if (isActiveSubmenu) {
+            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonActive]);
+        }
+        if (ImGui::Button(u8"Kitchen", buttonSize)) {
+            submenu = SubmenuType::KITCHEN;
+        }
+        if (isActiveSubmenu) {
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::TableNextColumn();
+        isActiveSubmenu = (submenu == SubmenuType::DELIVERY) ? true : false;
+        if (isActiveSubmenu) {
+            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[ImGuiCol_ButtonActive]);
+        }
+        if (ImGui::Button(u8"Delivery", buttonSize)) {
+            submenu = SubmenuType::DELIVERY;
+        }
+        if (isActiveSubmenu) {
+            ImGui::PopStyleColor();
+        }
+
+        static_assert(cmn::numberOf<SubmenuType>() == 3);
+        ImGui::EndTable();
+    }
+    ImGui::PopStyleVar();
+}
+
 void guiMenuMain(bool* open, ManagmentSystem& ms)
+{
+    static SubmenuType submenu{ SubmenuType::COMMON };
+
+    bool showGuiMenuCommon  { false };
+    bool showGuiMenuKitchen { false };
+    bool showGuiMenuDelivery{ false };
+
+    switch (submenu) {
+    case SubmenuType::COMMON:
+        showGuiMenuCommon   = true;
+        guiMenuCommon(&showGuiMenuCommon, ms, submenu);
+        break;
+    case SubmenuType::KITCHEN:
+        showGuiMenuKitchen  = true;
+        guiMenuKitchen(&showGuiMenuKitchen, ms, submenu);
+        break;
+    case SubmenuType::DELIVERY:
+        showGuiMenuDelivery = true;
+        guiMenuDelivery(&showGuiMenuDelivery, ms, submenu);
+        break;
+    }
+
+    if (!(showGuiMenuCommon || showGuiMenuKitchen || showGuiMenuDelivery)) {
+        submenu = SubmenuType::COMMON;
+        *open = false;
+    }
+    static_assert(cmn::numberOf<SubmenuType>() == 3);
+}
+
+void guiMenuCommon(bool* open, ManagmentSystem& ms, SubmenuType& submenu)
 {
     ImGuiWindowFlags window_flags{ 0 };
     guiCommonInitialization(window_flags);
     string s;
 
-    s = string{ u8"Main menu" } + u8"###MenuMain";
+    s = string{ u8"Common" } + u8"###MenuCommon";
     if (ImGui::Begin(s.c_str(), nullptr, window_flags)) {
-        // menu bar
-        static bool optEnableGrid{ true };
-        if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("Options")) {
-                ImGuiIO& io{ ImGui::GetIO() };
-                ImGui::Text("%.1f FPS (%.3f ms/frame)", io.Framerate, 1000.0f / io.Framerate);
-                ImGui::SliderInt("Frames per second (FPS)",
-                    &Options::instance().fps_, Options::minFPS_,
-                    Options::maxFPS_, "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Time speed (multiplier)",
-                    &Options::instance().timeSpeed_, Options::minTimeSpeed_,
-                    Options::maxTimeSpeed_, "%d", ImGuiSliderFlags_AlwaysClamp);
+        guiMenuBarOptions(ms);
 
-                ImGui::Separator();
-                ImGui::TextUnformatted("Map");
-                ImGui::Checkbox("Enable grid", &optEnableGrid);
-                ImGui::SliderInt("Scale##Map",
-                    &Options::instance().optMap_.scale_,
-                    OptionsMap::minScale_,
-                    OptionsMap::maxScale_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Vertex radius (pixels)##Map",
-                    &Options::instance().optMap_.vertexRadius_,
-                    OptionsMap::minVertexRadius_,
-                    OptionsMap::maxVertexRadius_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Edge width (pixels)##Map",
-                    &Options::instance().optMap_.edgeWidth_,
-                    OptionsMap::minEdgeWidth_,
-                    OptionsMap::maxEdgeWidth_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
+        guiMenuMain_Submenu(submenu);
 
-                ImGui::Separator();
-                ImGui::TextUnformatted("Delivery");
-                ImGui::SliderInt("Delivery time (sec)##Delivery",
-                    &Options::instance().optDelivery_.deliveryTime_,
-                    OptionsDelivery::minDeliveryTime_,
-                    OptionsDelivery::maxDeliveryTime_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Time to check free couriers (sec)##Delivery",
-                    &Options::instance().optDelivery_.checkTimeFreeCour_,
-                    OptionsDelivery::minCheckTimeFreeCour_,
-                    OptionsDelivery::maxCheckTimeFreeCour_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-
-                ImGui::Separator();
-                ImGui::TextUnformatted("Courier");
-                ImGui::SliderInt("Courier pause time (sec)##Courier",
-                    &Options::instance().optCourier_.pauseTime_,
-                    OptionsCourier::minPauseTime_,
-                    OptionsCourier::maxPauseTime_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Courier pause chance (%)##Courier",
-                    &Options::instance().optCourier_.pauseChance_,
-                    OptionsCourier::minPauseChance_,
-                    OptionsCourier::maxPauseChance_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Order acceptance time (sec)##Courier",
-                    &Options::instance().optCourier_.acceptanceTime_,
-                    OptionsCourier::minAcceptanceTime_,
-                    OptionsCourier::maxAcceptanceTime_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Delivery time (sec)##Courier",
-                    &Options::instance().optCourier_.deliveryTime_,
-                    OptionsCourier::minDeliveryTime_,
-                    OptionsCourier::maxDeliveryTime_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Payment time (sec)##Courier",
-                    &Options::instance().optCourier_.paymentTime_,
-                    OptionsCourier::minPaymentTime_,
-                    OptionsCourier::maxPaymentTime_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-                ImGui::SliderInt("Average courier speed (meters per second)##Courier",
-                    &Options::instance().optCourier_.averageSpeed_,
-                    OptionsCourier::minAverageSpeed_,
-                    OptionsCourier::maxAverageSpeed_,
-                    "%d", ImGuiSliderFlags_AlwaysClamp);
-
-                ImGui::EndMenu();
-            }
-
-            ImGui::SameLine(0.0f, 50.0f);
-            ImGui::TextUnformatted(cmn::getTime(ms.getCurrentTime()).c_str());
-
-            ImGui::EndMenuBar();
-        }
-
-        const ImVec2 defaultScrolling   { 0.0f, 0.0f };
-        ImVec2 contentRegionSize{ ImGui::GetContentRegionAvail() };
+        const unsigned int qtyColumn{ 4 };
+        const ImVec2 defaultScrolling{ 0.0f, 0.0f };
+        const ImVec2 contentRegionSize{ ImGui::GetContentRegionAvail() };
         const ImGuiStyle& style{ ImGui::GetStyle() };
-        ImVec2 infoColumnSize{
-            contentRegionSize.x / 4.0f - style.ItemSpacing.x,
-            contentRegionSize.y - style.ItemSpacing.y
+        static_assert(qtyColumn > 1);
+        const ImVec2 columnSize{
+            (contentRegionSize.x - style.ItemSpacing.x * (qtyColumn - 1)) / qtyColumn,
+            contentRegionSize.y
         };
         ImVec2 canvasSize{
-            contentRegionSize.x / 4.0f * 3.0f - style.ItemSpacing.x,
-            contentRegionSize.y - style.ItemSpacing.y
+            columnSize.x * (qtyColumn - 1) + style.ItemSpacing.x * (qtyColumn - 2),
+            columnSize.y
         };
 
         // draw INFO panel
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
         ImGuiWindowFlags flags{ ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse };
-        if (ImGui::BeginChild("Info", infoColumnSize, false, flags)) {
+        if (ImGui::BeginChild("Info", columnSize, false, flags)) {
             ImGui::PopStyleVar();
+            const unsigned int qtyListBox{ 3 };
+            const ImVec2 sizeListBox{
+                -FLT_MIN,
+                columnSize.y / qtyListBox - ImGui::GetTextLineHeightWithSpacing()
+            };
             const unsigned int width{ 8 };
             const char filler{ '0' };
 
             ImGui::TextUnformatted("Orders in the \"Cooking\" status (top - first)");
-            if (ImGui::BeginListBox("Cooking orders",
-                ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() + 2)))
-            {
+            if (ImGui::BeginListBox("Cooking orders", sizeListBox)) {
                 auto cookOrders{ ms.kitchen().getOrders() };
                 for (auto iter{ cookOrders.first }; iter != cookOrders.second; ++iter) {
                     ostringstream oss;
@@ -149,9 +159,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
             }
 
             ImGui::TextUnformatted("Orders with the \"Delivery\" status (top - first)");
-            if (ImGui::BeginListBox("Delivery orders",
-                ImVec2(-FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() + 2)))
-            {
+            if (ImGui::BeginListBox("Delivery orders", sizeListBox)) {
                 auto delivOrders{ ms.delivery().getOrders() };
                 for (auto iter{ delivOrders.first }; iter != delivOrders.second; ++iter) {
                     ostringstream oss;
@@ -163,9 +171,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
             }
 
             ImGui::TextUnformatted("Orders with the \"Completed\" status (top - last)");
-            if (ImGui::BeginListBox("Completed orders",
-                ImVec2(-FLT_MIN, Options::numComplOrders_ * ImGui::GetTextLineHeightWithSpacing() + 2)))
-            {
+            if (ImGui::BeginListBox("Completed orders", sizeListBox)) {
                 auto complOrders{ ms.scheduler().getOrdersCompleted() };
                 boost::circular_buffer<Order*>::const_iterator iter{ complOrders.second };
                 while (iter != complOrders.first) {
@@ -360,7 +366,7 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
 
         drawList->PushClipRect(canvasP0, canvasP1, true);
         // draw grid of the canvas
-        if (optEnableGrid) {
+        if (Options::instance().optMap_.showGrid_) {
             const float gridStep{ 100.0f };
             for (float x{ fmodf(scrolling.x, gridStep) }; x < canvasSize.x; x += gridStep) {
                 drawList->AddLine(ImVec2{ canvasP0.x + x, canvasP0.y },
@@ -421,6 +427,410 @@ void guiMenuMain(bool* open, ManagmentSystem& ms)
         }
 
         drawList->PopClipRect();
+    }
+    ImGui::End();
+}
+
+void guiMenuKitchen(bool* open, ManagmentSystem& ms, SubmenuType& submenu)
+{
+    ImGuiWindowFlags window_flags{ 0 };
+    guiCommonInitialization(window_flags);
+    string s;
+
+    s = string{ u8"Kitchen" } + u8"###MenuKitchen";
+    if (ImGui::Begin(s.c_str(), nullptr, window_flags)) {
+        guiMenuBarOptions(ms);
+
+        guiMenuMain_Submenu(submenu);
+
+        const unsigned int qtyColumn{ 4 };
+        const ImVec2 contentRegionSize{ ImGui::GetContentRegionAvail() };
+        const ImGuiStyle& style{ ImGui::GetStyle() };
+        static_assert(qtyColumn > 0);
+        const ImVec2 columnSize{
+            (contentRegionSize.x - style.ItemSpacing.x * (qtyColumn - 1)) / qtyColumn,
+            contentRegionSize.y
+        };
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        ImGuiWindowFlags flags{ ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse };
+        if (ImGui::BeginChild("Column1", columnSize, false, flags)) {
+            ImGui::PopStyleVar();
+            const unsigned int width{ 8 };
+            const char filler{ '0' };
+
+            ImGui::TextUnformatted("Orders in the \"Cooking\" status (top - first)");
+            if (ImGui::BeginListBox("Cooking orders", ImVec2(-FLT_MIN, -FLT_MIN))) {
+                auto cookOrders{ ms.kitchen().getOrders() };
+                for (auto iter{ cookOrders.first }; iter != cookOrders.second; ++iter) {
+                    ostringstream oss;
+                    oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
+                        << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else {
+            ImGui::PopStyleVar();
+        }
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        if (ImGui::BeginChild("Column2", columnSize, false, flags)) {
+            ImGui::PopStyleVar();
+            const unsigned int qtyListBox{ 3 };
+            const ImVec2 sizeListBox{
+                -FLT_MIN,
+                columnSize.y / qtyListBox - ImGui::GetTextLineHeightWithSpacing()
+            };
+
+            ImGui::TextUnformatted("Dough queue (top - first)");
+            if (ImGui::BeginListBox("Dough queue", sizeListBox)) {
+                auto foodQueueDough{ ms.kitchen().getQueueDough() };
+                for (auto iter{ foodQueueDough.first }; iter != foodQueueDough.second; ++iter) {
+                    ostringstream oss;
+                    oss << toString((*iter)->getName()) << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+
+            ImGui::TextUnformatted("Filling queue (top - first)");
+            if (ImGui::BeginListBox("Filling queue", sizeListBox)) {
+                auto foodQueueFilling{ ms.kitchen().getQueueFilling() };
+                for (auto iter{ foodQueueFilling.first }; iter != foodQueueFilling.second; ++iter) {
+                    ostringstream oss;
+                    oss << toString((*iter)->getName()) << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+
+            ImGui::TextUnformatted("Picker queue (top - first)");
+            if (ImGui::BeginListBox("Picker queue", sizeListBox)) {
+                auto foodQueuePicker{ ms.kitchen().getQueuePicker() };
+                for (auto iter{ foodQueuePicker.first }; iter != foodQueuePicker.second; ++iter) {
+                    ostringstream oss;
+                    oss << toString((*iter)->getName()) << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else {
+            ImGui::PopStyleVar();
+        }
+        ImGui::EndChild();
+
+
+        const ImVec2 column3Size{
+            columnSize.x * 2 + style.ItemSpacing.x,
+            columnSize.y
+        };
+        ImGui::SameLine();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        if (ImGui::BeginChild("Column3", column3Size, false, flags)) {
+            ImGui::PopStyleVar();
+            const unsigned int width{ 4 };
+            const char filler{ '0' };
+            auto kitcheners{ ms.getKitcheners() };
+            ImGui::TextUnformatted("Kitcheners");
+            if (ImGui::BeginListBox("Kitcheners", ImVec2(-FLT_MIN, -FLT_MIN))) {
+                for (auto iter{ kitcheners.first }; iter != kitcheners.second; ++iter) {
+                    ostringstream oss;
+                    const auto kitchener{ iter->get() };
+                    oss << "ID: " << setw(width) << setfill(filler)
+                        << cmn::toUnderlying(kitchener->getID())
+                        << " - " << toString(kitchener->getType())
+                        << " - " << toString(kitchener->getStatus());
+                    const auto food{ kitchener->getFood() };
+                    if (food != nullptr) {
+                        oss << " (" << toString(food->getName())
+                            << " - OrderID: "
+                            << cmn::toUnderlying(ms.kitchen().getOrder(food).getID()) << ")";
+                    }
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else {
+            ImGui::PopStyleVar();
+        }
+        ImGui::EndChild();
+    }
+    ImGui::End();
+}
+
+void guiMenuDelivery(bool* open, ManagmentSystem& ms, SubmenuType& submenu)
+{
+    ImGuiWindowFlags window_flags{ 0 };
+    guiCommonInitialization(window_flags);
+    string s;
+
+    s = string{ u8"Delivery" } + u8"###MenuDelivery";
+    if (ImGui::Begin(s.c_str(), nullptr, window_flags)) {
+        guiMenuBarOptions(ms);
+
+        guiMenuMain_Submenu(submenu);
+
+#if 1
+        const ImGuiStyle& style{ ImGui::GetStyle() };
+        const ImVec2 tlScrPos{ ImGui::GetCursorScreenPos() };
+        const ImVec2 regionSize{ ImGui::GetContentRegionAvail() };
+        const ImGuiTileMesh tileMesh{ tlScrPos, regionSize, Tile{ 4, 4 }, style.ItemSpacing.y };
+        ImVec2 tilePos;
+        ImVec2 tileSize;
+        ImGuiWindowFlags flags;
+
+        tilePos = tileMesh.getPos(Tile{ 1,1 });
+        tileSize = tileMesh.getSize(Tile{ 1,2 });
+        ImGui::SetCursorScreenPos(tilePos);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        if (ImGui::BeginChild("Tile1", tileSize, false, flags)) {
+            ImGui::PopStyleVar();
+            const unsigned int width{ 8 };
+            const char filler{ '0' };
+
+            ImGui::TextUnformatted("Orders with the \"Delivery\" status (top - first)");
+            if (ImGui::BeginListBox("Delivery orders", ImVec2(-FLT_MIN, -FLT_MIN))) {
+                auto delivOrders{ ms.delivery().getOrders() };
+                for (auto iter{ delivOrders.first }; iter != delivOrders.second; ++iter) {
+                    ostringstream oss;
+                    oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
+                        << " - " << toString((*iter)->getStatus());
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else {
+            ImGui::PopStyleVar();
+        }
+        ImGui::EndChild();
+
+
+        tilePos = tileMesh.getPos(Tile{ 2,1 });
+        tileSize = tileMesh.getSize(Tile{ 1,2 });
+        ImGui::SetCursorScreenPos(tilePos);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        if (ImGui::BeginChild("Tile2", tileSize, false, flags)) {
+            ImGui::PopStyleVar();
+            const unsigned int width{ 8 };
+            const char filler{ '0' };
+
+            ImGui::TextUnformatted("Orders with the \"Completed\" status (top - last)");
+            if (ImGui::BeginListBox("Completed orders", ImVec2(-FLT_MIN, -FLT_MIN))) {
+                auto complOrders{ ms.scheduler().getOrdersCompleted() };
+                boost::circular_buffer<Order*>::const_iterator iter{ complOrders.second };
+                while (iter != complOrders.first) {
+                    --iter;
+                    ostringstream oss;
+                    oss << setw(width) << setfill(filler) << cmn::toUnderlying((*iter)->getID())
+                        << " - " << toString((*iter)->getStatus());
+                    if ((*iter)->getStatus() == OrderStatus::COMPLETED) {
+                        oss << " in "
+                            << cmn::getDuration((*iter)->getTimeEnd() - (*iter)->getTimeStart());
+                    }
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else {
+            ImGui::PopStyleVar();
+        }
+        ImGui::EndChild();
+
+
+        tilePos = tileMesh.getPos(Tile{ 1,3 });
+        tileSize = tileMesh.getSize(Tile{ 2,2 });
+        ImGui::SetCursorScreenPos(tilePos);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f });
+        flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        if (ImGui::BeginChild("Tile3", tileSize, false, flags)) {
+            ImGui::PopStyleVar();
+            const unsigned int width{ 4 };
+            const char filler{ '0' };
+            auto couriers{ ms.getCouriers() };
+
+            ImGui::TextUnformatted("Couriers");
+            if (ImGui::BeginListBox("Couriers", ImVec2(-FLT_MIN, -FLT_MIN))) {
+                for (auto iter{ couriers.first }; iter != couriers.second; ++iter) {
+                    ostringstream oss;
+                    const auto courier{ iter->get() };
+                    const auto status{ courier->getStatus() };
+                    oss << "ID: " << setw(width) << setfill(filler)
+                        << cmn::toUnderlying(courier->getID())
+                        << " - " << toString(status);
+                    if (status == CourierStatus::MOVEMENT_TO_CUSTOMER ||
+                        status == CourierStatus::DELIVERY_AND_PAYMENT)
+                    {
+                        const auto curOrder{ courier->getCurrentOrder() };
+                        oss << " (OrderID: "
+                            << cmn::toUnderlying((*curOrder)->getID()) << ")";
+                    }
+                    ImGui::TextUnformatted(oss.str().c_str());
+                }
+                ImGui::EndListBox();
+            }
+        }
+        else {
+            ImGui::PopStyleVar();
+        }
+        ImGui::EndChild();
+
+
+#else
+        {
+            const ImGuiStyle& style{ ImGui::GetStyle() };
+            const ImVec2 tlScrPos{ ImGui::GetCursorScreenPos() };
+            const ImVec2 regionSize{ ImGui::GetContentRegionAvail() };
+            const ImGuiTileMesh tileMesh{ tlScrPos, regionSize, Tile{ 4, 3 }, style.ItemSpacing.y };
+
+            ImDrawList* drawList{ ImGui::GetWindowDrawList() };
+            ImVec2 pos;
+            ImVec2 size;
+
+            drawList->AddRect(tlScrPos,
+                ImVec2{ tlScrPos.x + regionSize.x, tlScrPos.y + regionSize.y },
+                ImGui::GetColorU32(color::white));
+
+
+#if 0
+            pos = tileMesh.getPos(Tile{ 1,1 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::blue));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 2,1 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::grey));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 3,1 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::turquoise));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 4,1 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::yellow));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+
+
+            pos = tileMesh.getPos(Tile{ 1,2 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::grey30));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 2,2 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::green));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 3,2 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::grey));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 4,2 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::orange));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+
+
+            pos = tileMesh.getPos(Tile{ 1,3 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::blue));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 2,3 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::grey30));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 3,3 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::turquoise));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 4,3 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::grey));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+#else
+
+            pos = tileMesh.getPos(Tile{ 1,1 });
+            size = tileMesh.getSize(Tile{ 1,2 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::blue));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 2,1 });
+            size = tileMesh.getSize(Tile{ 2,2 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::turquoise));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 4,1 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::grey));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 4,2 });
+            size = tileMesh.getSize(Tile{ 1,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::green));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+
+            pos = tileMesh.getPos(Tile{ 1,3 });
+            size = tileMesh.getSize(Tile{ 4,1 });
+            drawList->AddRect(pos, ImVec2{ pos.x + size.x, pos.y + size.y },
+                ImGui::GetColorU32(color::yellow));
+            ImGui::SetCursorScreenPos(pos);
+            ImGui::Text("Size %f x %f", size.x, size.y);
+#endif
+        }
+#endif
     }
     ImGui::End();
 }

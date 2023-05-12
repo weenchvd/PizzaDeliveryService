@@ -8,6 +8,7 @@
 #define GUI_MENU_COMMON_HPP
 
 #include"imgui.h"
+#include"msystem.hpp"
 
 namespace ds {
 
@@ -33,9 +34,52 @@ const ImVec4 grey20             { 50.0f / 255.0f, 50.0f / 255.0f, 50.0f / 255.0f
 
 } //namespace color
 
+
+struct Tile {
+    static constexpr unsigned short int minSize_{ 1 };
+    static constexpr unsigned short int maxSize_{ 64 };
+
+    constexpr Tile(unsigned short int x, unsigned short int y) noexcept
+        : x_{ x }, y_{ y }
+    {
+        static_assert(minSize_ >= 1);
+        if      (x_ < minSize_) x_ = minSize_;
+        else if (x_ > maxSize_) x_ = maxSize_;
+        if      (y_ < minSize_) y_ = minSize_;
+        else if (y_ > maxSize_) y_ = maxSize_;
+    }
+
+    unsigned short int x_;
+    unsigned short int y_;
+};
+
+
+class ImGuiTileMesh {
+public:
+    explicit ImGuiTileMesh(ImVec2 pos,
+                           ImVec2 regionSize,
+                           Tile dimension,
+                           float itemSpacing) noexcept;
+
+    ImVec2 getPos(Tile coordinate) const noexcept;
+
+    ImVec2 getSize(Tile dimension) const noexcept;
+
+private:
+    ImVec2          pos_;
+    ImVec2          regionSize_;
+    ImVec2          tileSize_;
+    float           itemSpacing_;
+    Tile            dimension_;
+};
+
+///************************************************************************************************
+
 void guiCommonInitialization(ImGuiWindowFlags& window_flags);
 
 ///************************************************************************************************
+
+void guiMenuBarOptions(ManagmentSystem& ms);
 
 } // namespace ds
 

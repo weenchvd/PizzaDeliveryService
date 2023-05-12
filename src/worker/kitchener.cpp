@@ -14,6 +14,42 @@ namespace ds {
 
 using namespace std;
 
+string toString(KitchenerType value)
+{
+    switch (value) {
+    case KitchenerType::__INVALID:
+        return u8"INVALID";
+    case KitchenerType::DOUGH:
+        return u8"Dough";
+    case KitchenerType::FILLING:
+        return u8"Filling";
+    case KitchenerType::PICKER:
+        return u8"Picker";
+    default:
+        return u8"UNKNOWN";
+    }
+    static_assert(cmn::numberOf<KitchenerType>() == 3);
+}
+
+string toString(KitchenerStatus value)
+{
+    switch (value) {
+    case KitchenerStatus::__INVALID:
+        return u8"INVALID";
+    case KitchenerStatus::INACCESSIBLE:
+        return u8"Inaccessible";
+    case KitchenerStatus::WAITING_FOR_NEXT:
+        return u8"Waiting for next";
+    case KitchenerStatus::MAKING:
+        return u8"Making";
+    default:
+        return u8"UNKNOWN";
+    }
+    static_assert(cmn::numberOf<KitchenerStatus>() == 3);
+}
+
+///************************************************************************************************
+
 KitchenerInaccessible   KitchenerInaccessible::state_{};
 KitchenerWaiting        KitchenerWaiting::state_{};
 KitchenerMaking         KitchenerMaking::state_{};
