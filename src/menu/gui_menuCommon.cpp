@@ -14,38 +14,38 @@ namespace ds {
 
 using namespace std;
 
-ImGuiTileMesh::ImGuiTileMesh(ImVec2 pos,
+ImGuiTileGrid::ImGuiTileGrid(ImVec2 pos,
                              ImVec2 regionSize,
-                             Tile dimension,
+                             TileLayout layout,
                              float itemSpacing) noexcept
     :
     pos_        { pos },
     regionSize_ { regionSize },
     tileSize_   {},
     itemSpacing_{ itemSpacing },
-    dimension_  { dimension }
+    tileLayout_ { layout }
 {
-    assert(dimension_.x_ > 0);
-    assert(dimension_.y_ > 0);
+    assert(tileLayout_.x_ > 0);
+    assert(tileLayout_.y_ > 0);
     tileSize_ = ImVec2{
-        floor((regionSize_.x - itemSpacing_ * (dimension_.x_ - 1)) / dimension_.x_),
-        floor((regionSize_.y - itemSpacing_ * (dimension_.y_ - 1)) / dimension_.y_),
+        floor((regionSize_.x - itemSpacing_ * (tileLayout_.x_ - 1)) / tileLayout_.x_),
+        floor((regionSize_.y - itemSpacing_ * (tileLayout_.y_ - 1)) / tileLayout_.y_),
     };
 }
 
-ImVec2 ImGuiTileMesh::getPos(Tile coordinate) const noexcept
+ImVec2 ImGuiTileGrid::getPos(TilePositon topLeft) const noexcept
 {
     return ImVec2{
-        pos_.x + (tileSize_.x + itemSpacing_) * (coordinate.x_ - 1),
-        pos_.y + (tileSize_.y + itemSpacing_) * (coordinate.y_ - 1)
+        pos_.x + (tileSize_.x + itemSpacing_) * (topLeft.x_ - 1),
+        pos_.y + (tileSize_.y + itemSpacing_) * (topLeft.y_ - 1)
     };
 }
 
-ImVec2 ImGuiTileMesh::getSize(Tile dimension) const noexcept
+ImVec2 ImGuiTileGrid::getSize(TileLayout size) const noexcept
 {
     return ImVec2{
-        tileSize_.x * dimension.x_ + itemSpacing_ * (dimension.x_ - 1),
-        tileSize_.y * dimension.y_ + itemSpacing_ * (dimension.y_ - 1)
+        tileSize_.x * size.x_ + itemSpacing_ * (size.x_ - 1),
+        tileSize_.y * size.y_ + itemSpacing_ * (size.y_ - 1)
     };
 }
 

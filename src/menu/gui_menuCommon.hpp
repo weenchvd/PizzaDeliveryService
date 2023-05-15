@@ -53,24 +53,36 @@ struct Tile {
     unsigned short int y_;
 };
 
+struct TilePositon : Tile {
+    constexpr TilePositon(unsigned short int positionInLayoutByX,
+                          unsigned short int positionInLayoutByY) noexcept
+        : Tile{ positionInLayoutByX, positionInLayoutByY } {}
+};
 
-class ImGuiTileMesh {
+struct TileLayout : Tile {
+    constexpr TileLayout(unsigned short int numberOfTilesByX,
+                         unsigned short int numberOfTilesByY) noexcept
+        : Tile{ numberOfTilesByX, numberOfTilesByY } {}
+};
+
+
+class ImGuiTileGrid {
 public:
-    explicit ImGuiTileMesh(ImVec2 pos,
+    explicit ImGuiTileGrid(ImVec2 pos,
                            ImVec2 regionSize,
-                           Tile dimension,
+                           TileLayout layout,
                            float itemSpacing) noexcept;
 
-    ImVec2 getPos(Tile coordinate) const noexcept;
+    ImVec2 getPos(TilePositon topLeft) const noexcept;
 
-    ImVec2 getSize(Tile dimension) const noexcept;
+    ImVec2 getSize(TileLayout size) const noexcept;
 
 private:
     ImVec2          pos_;
     ImVec2          regionSize_;
     ImVec2          tileSize_;
     float           itemSpacing_;
-    Tile            dimension_;
+    TileLayout      tileLayout_;
 };
 
 ///************************************************************************************************

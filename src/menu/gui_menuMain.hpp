@@ -23,6 +23,14 @@ enum class SubmenuType : char {
     __END                           /// must be the last
 };
 
+constexpr ImVec2 defaultMapScrolling{ 50, 50 };
+
+struct GuiMapData {
+    ImVec2 scrolling_{ defaultMapScrolling };
+    ImVec2 tilePos_;
+    ImVec2 tileSize_;
+};
+
 ///************************************************************************************************
 
 void guiMenuMain_Submenu(SubmenuType& submenu);
@@ -34,6 +42,8 @@ void guiMenuCommon(bool* open, ManagmentSystem& ms, SubmenuType& submenu);
 void guiMenuKitchen(bool* open, ManagmentSystem& ms, SubmenuType& submenu);
 
 void guiMenuDelivery(bool* open, ManagmentSystem& ms, SubmenuType& submenu);
+
+void guiMap(ManagmentSystem& ms, GuiMapData& mapData);
 
 } // namespace ds
 
